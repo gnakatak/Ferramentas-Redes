@@ -1,0 +1,14 @@
+Flask==3.0.2
+streamlit==1.33.0
+scapy==2.5.0
+pydivert==2.1.0
+pyshark==0.6.5 
+dnspython==2.4.2 
+websockets==12.0 
+flask-socketio==5.3.6 
+eventlet==0.33.3 
+chart-studio==1.1.0 
+pandas==2.2.2
+matplotlib==3.8.4 
+psutil==5.9.8 
+netifaces==0.11.0 
