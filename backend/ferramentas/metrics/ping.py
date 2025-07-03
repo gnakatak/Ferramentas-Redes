@@ -12,21 +12,33 @@ def ping(host='8.8.8.8', count=4):
 
     try:
         output = subprocess.check_output(cmd, universal_newlines=True)
-        print(output)
 
-        # Extração simples da latência média (pode ser ajustada conforme o SO)
-        if "avg" in output:
-            match = re.search(r'avg\/([\d\.]+)', output)
+        output = re.sub(r'([=\d]+)ms', r'\1 ms', output)
+        output = output.replace(',', '   ')
+
+        # Extração da latência média
+        if system == "windows":
+            match = re.search(r'M[ée]dia = (\d+)', output)
         else:
-            match = re.search(r'=\s.*\/([\d\.]+)\/', output)
-        
+            match = re.search(r'=\s[\d\.]+/([\d\.]+)/', output)
+
         if match:
             avg_latency = float(match.group(1))
-            print(f"Latência média: {avg_latency} ms")
-            return avg_latency
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao executar o ping: {e}")
-        return None
+        else:
+            avg_latency = None
 
-if __name__ == '__main__':
-    ping()
+        return {
+            "success": True,
+            "host": host,
+            "count": count,
+            "output": output,
+            "avg_latency_ms": avg_latency
+        }
+
+    except subprocess.CalledProcessError as e:
+        return {
+            "success": False,
+            "host": host,
+            "count": count,
+            "error": str(e),
+        }
