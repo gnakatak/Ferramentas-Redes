@@ -5,14 +5,16 @@ st.set_page_config(page_title="Ferramentas de Rede", layout="centered")
 
 st.title("📡 Ferramentas de Rede")
 
-# 📌 Entrada de dados (IP ou domínio e número de pacotes)
-host = st.text_input("Endereço IP ou domínio", value="8.8.8.8")
-count = st.number_input("Número de pacotes (ping)", min_value=1, max_value=50, value=3)
+
 
 # ==========================
 # 🎯 MEDIDOR DE LATÊNCIA
 # ==========================
 st.subheader("📍 Medidor de Latência da Rede")
+
+# 📌 Entrada de dados (IP ou domínio e número de pacotes)
+host = st.text_input("Endereço IP ou domínio", value="8.8.8.8")
+count = st.number_input("Número de pacotes (ping)", min_value=1, max_value=50, value=3)
 
 if st.button("🔍 Medir Latência (Ping)"):
     try:
@@ -49,3 +51,21 @@ if st.button("📦 Medir Throughput"):
             st.error("Erro ao medir throughput.")
     except Exception as e:
         st.error(f"Erro: {e}")
+
+
+st.subheader("🌐 Medidor de velocidade da Internet (via Speedtest)")
+
+if st.button("Iniciar medição Speedtest"):
+    with st.spinner("Executando medição..."):
+        try:
+            res = requests.get("http://127.0.0.1:5000/api/metrics/speedtest")
+            data = res.json()
+            if data.get("success"):
+                st.success("Medição concluída com sucesso:")
+                st.markdown(f"- **Ping:** {data['ping_ms']} ms")
+                st.markdown(f"- **Download:** {data['download_mbps']} Mbps")
+                st.markdown(f"- **Upload:** {data['upload_mbps']} Mbps")
+            else:
+                st.error(f"Erro ao medir: {data.get('error')}")
+        except Exception as e:
+            st.error(f"Erro de conexão: {e}")

@@ -1,3 +1,4 @@
+import backend.ferramentas.metrics.speedtest_module as spd_module 
 from flask import Blueprint, jsonify, request
 import backend.ferramentas.metrics.ping as ping_module
 import backend.ferramentas.metrics.throughput as tp_module
@@ -26,3 +27,8 @@ def throughput_route():
     result = tp_module.medir_throughput()
     return jsonify(result)
 
+
+@api_routes.route("/api/metrics/speedtest")
+def speedtest_route():
+    result = spd_module.medir_speedtest()
+    return jsonify(result)
