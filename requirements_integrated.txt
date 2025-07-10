@@ -1,0 +1,4 @@
+# Dependências para a versão integrada do sniffer
+streamlit
+pyshark
+pandas

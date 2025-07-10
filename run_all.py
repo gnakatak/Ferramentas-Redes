@@ -20,7 +20,7 @@ if not os.path.exists(FRONTEND_PATH):
 # Inicia o backend Flask
 print("Iniciando o backend Flask...")
 backend_process = subprocess.Popen(
-    ["python", "-m", "backend.server"],  # Melhor que chamar o arquivo direto
+    ["C:/Users/gabry/AppData/Local/Programs/Python/Python313/python.exe", "backend/server.py"],
     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
 )
 
@@ -30,7 +30,7 @@ time.sleep(3)
 # Inicia o frontend Streamlit
 print("Iniciando o frontend Streamlit...")
 frontend_process = subprocess.Popen(
-    ["streamlit", "run", FRONTEND_PATH],
+    ["C:/Users/gabry/AppData/Local/Programs/Python/Python313/python.exe", "-m", "streamlit", "run", FRONTEND_PATH],
     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
 )
 
