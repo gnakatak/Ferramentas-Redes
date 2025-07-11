@@ -5,22 +5,22 @@ import signal
 import sys
 
 # Caminhos relativos dos scripts
-BACKEND_PATH = os.path.join("backend", "ferramentas", "mini_chat", "chat_server.py")
-FRONTEND_PATH = os.path.join("backend", "ferramentas", "mini_chat", "chat_client.py")
+BACKEND_PATH = os.path.join("backend", "server.py")
+FRONTEND_PATH = os.path.join("frontend", "app.py")
 
 # Verifica se os arquivos existem
 if not os.path.exists(BACKEND_PATH):
-    print(f"Erro: {BACKEND_PATH} não encontrado.")
+    print("Erro: backend/server.py não encontrado.")
     sys.exit(1)
 
 if not os.path.exists(FRONTEND_PATH):
-    print(f"Erro: {FRONTEND_PATH} não encontrado.")
+    print("Erro: frontend/app.py não encontrado.")
     sys.exit(1)
 
-# Inicia o backend Flask + SocketIO
-print("Iniciando o backend Flask (SocketIO)...")
+# Inicia o backend Flask
+print("Iniciando o backend Flask...")
 backend_process = subprocess.Popen(
-    ["python", BACKEND_PATH],
+    ["python", "-m", "backend.server"],  # Melhor que chamar o arquivo direto
     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
 )
 

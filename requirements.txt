@@ -12,3 +12,5 @@ pandas
 matplotlib
 psutil
 netifaces
+websocket-client
+websocket
