@@ -1,55 +1,44 @@
 import streamlit as st
-import websocket
-print("websocket importado de:", websocket.__file__)
-import threading
-import time
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Mini Chat", layout="wide")
-st.title("💬 Mini Chat com WebSocket")
+st.title("💬 Mini Chat em Tempo Real")
 
-# Variável para armazenar mensagens
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Função para ouvir mensagens do servidor
-def listen():
-    def on_message(ws, message):
-        st.session_state.messages.append(message)
-        st.experimental_rerun()
-
-    def on_error(ws, error):
-        print("Erro:", error)
-
-    def on_close(ws, close_status_code, close_msg):
-        print("Conexão encerrada")
-
-    ws = websocket.WebSocketApp(
-        "ws://localhost:5000/socket.io/?EIO=4&transport=websocket",
-        on_message=on_message,
-        on_error=on_error,
-        on_close=on_close
-    )
-    ws.run_forever()
-
-# Inicia a thread de escuta só uma vez
-if "listener_started" not in st.session_state:
-    threading.Thread(target=listen, daemon=True).start()
-    st.session_state.listener_started = True
-
-# Campo para digitar mensagem
-with st.form(key="chat_form"):
-    user_msg = st.text_input("Digite sua mensagem:")
-    submitted = st.form_submit_button("Enviar")
-    if submitted and user_msg.strip():
-        try:
-            ws = websocket.create_connection("ws://localhost:5000/socket.io/?EIO=4&transport=websocket")
-            ws.send(user_msg)
-            ws.close()
-        except Exception as e:
-            st.error(f"Erro ao enviar mensagem: {e}")
-        st.session_state.messages.append(f"Você: {user_msg}")
-
-# Exibir mensagens
-st.subheader("Mensagens:")
-for msg in st.session_state.messages:
-    st.markdown(f"- {msg}")
+# Usa CDN do Socket.IO client
+components.html(f"""
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div>
+      <h3>Chat</h3>
+      <div id="chat-box" style="border:1px solid #ccc; height:250px; overflow:auto; padding:5px; background:#f9f9f9;"></div>
+      <input id="msg" type="text" placeholder="Digite sua mensagem..." style="width:80%;" onkeydown="if(event.key==='Enter')sendMessage();"/>
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+    <script>
+      var socket = io("ws://localhost:5000", {{
+        transports: ["websocket"]
+      }});
+      socket.on("connect", function() {{
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += "<p><em>Conectado ao chat.</em></p>";
+      }});
+      socket.on("message", function(msg) {{
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += "<p>" + msg + "</p>";
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }});
+      function sendMessage() {{
+        let input = document.getElementById("msg");
+        if (input.value.trim() !== "") {{
+          socket.send(input.value);
+          input.value = "";
+        }}
+      }}
+    </script>
+  </body>
+</html>
+""", height=350)
