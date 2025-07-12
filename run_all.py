@@ -6,7 +6,7 @@ import sys
 
 # Caminhos relativos dos scripts
 BACKEND_PATH = os.path.join("backend", "server.py")
-FRONTEND_PATH = os.path.join("frontend", "app.py")
+FRONTEND_PATH = os.path.join("frontend", "dashboard.py")
 
 # Verifica se os arquivos existem
 if not os.path.exists(BACKEND_PATH):
@@ -38,6 +38,11 @@ try:
     frontend_process.wait()
 except KeyboardInterrupt:
     print("\nInterrompido. Finalizando ambos os processos...")
+    backend_process.send_signal(signal.CTRL_BREAK_EVENT)  # Para Windows
+    frontend_process.send_signal(signal.CTRL_BREAK_EVENT)
+    time.sleep(1)
+    backend_process.terminate()
+    frontend_process.terminate()
 
 # Encerra os dois processos
 backend_process.terminate()
