@@ -7,7 +7,7 @@ import sys
 # Caminhos relativos dos scripts
 
 BACKEND_PATH = os.path.join("backend", "ferramentas", "mini_chat", "chat_server.py")
-FRONTEND_PATH = os.path.join("backend", "ferramentas", "mini_chat", "chat_client.py"
+FRONTEND_PATH = os.path.join("backend", "ferramentas", "mini_chat", "chat_client.py")
 
 # Verifica se os arquivos existem
 if not os.path.exists(BACKEND_PATH):
