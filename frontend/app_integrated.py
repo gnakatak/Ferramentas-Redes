@@ -76,14 +76,23 @@ if 'packets' not in st.session_state:
     st.session_state.packets = []
 
 # Sidebar para navegação
-st.sidebar.title("🌐 Ferramentas de Redes - Integrado")
-page = st.sidebar.selectbox(
-    "Escolha uma ferramenta:",
-    ["Home", "Sniffer de Pacotes", "Outras Ferramentas"]
+st.sidebar.title("🛠️ Ferramentas Disponíveis")
+tool = st.sidebar.radio(
+    "Selecione uma ferramenta:",
+    [
+        "🏠 Home",
+        "📡 Sniffer de Pacotes",
+        "🔍 Port Scanner",
+        "🌐 Network Scanner",
+        "📶 Ping & Traceroute",
+        "📊 Bandwidth Monitor",
+        "📋 Network Info",
+        "⚙️ Configurações"
+    ]
 )
 
-if page == "Home":
-    st.title("🌐 Ferramentas de Redes - Versão Integrada")
+if tool == "🏠 Home":
+    st.header("🏠 Dashboard - Ferramentas de Redes")
     
     # Verificação de disponibilidade
     if SNIFFER_AVAILABLE:
@@ -120,8 +129,8 @@ if page == "Home":
     **👈 Use o menu lateral para navegar para o Sniffer de Pacotes**
     """)
 
-elif page == "Sniffer de Pacotes":
-    st.title("🔍 Sniffer de Pacotes - Versão Integrada")
+elif tool == "📡 Sniffer de Pacotes":
+    st.header("📡 Sniffer de Pacotes")
     
     # Verifica se o sniffer está disponível
     if not SNIFFER_AVAILABLE:
@@ -526,20 +535,132 @@ elif page == "Sniffer de Pacotes":
         - **PyShark**: Certifique-se de que está instalado
         """)
 
-elif page == "Outras Ferramentas":
-    st.title("🛠️ Outras Ferramentas")
+elif tool == "🔍 Port Scanner":
+    st.header("🔍 Port Scanner")
     st.markdown("""
     ### 🚧 Em desenvolvimento
     
-    Esta versão foca no **Sniffer de Pacotes**. Outras ferramentas podem ser adicionadas futuramente:
+    Esta ferramenta permitirá escanear portas de dispositivos na rede.
     
-    - 🛡️ **Firewall**: Configuração de regras
-    - 📊 **Métricas**: Ping, throughput, latência
-    - 💬 **Chat**: Sistema de comunicação
-    - 🌐 **Port Scanner**: Varredura de portas
-    - 📡 **Network Discovery**: Descoberta de dispositivos
+    **Funcionalidades planejadas:**
+    - Escaneamento de portas TCP/UDP
+    - Detecção de serviços
+    - Exportação de resultados
     
-    **Sugestões?** Abra uma issue no repositório!
+    **Uso:**
+    1. Insira o intervalo de IPs ou selecione um dispositivo da rede
+    2. Escolha as portas ou intervalos de portas a serem escaneadas
+    3. Inicie o escaneamento e aguarde os resultados
+    
+    **Notas:**
+    - O escaneamento pode demorar dependendo do número de portas e dispositivos
+    - Certifique-se de ter permissão para escanear os dispositivos na rede
+    """)
+
+elif tool == "🌐 Network Scanner":
+    st.header("🌐 Network Scanner")
+    st.markdown("""
+    ### 🚧 Em desenvolvimento
+    
+    Esta ferramenta permitirá descobrir dispositivos na rede e coletar informações básicas.
+    
+    **Funcionalidades planejadas:**
+    - Descoberta de dispositivos na mesma rede local
+    - Coleta de informações como IP, MAC, fabricante, etc.
+    - Exibição de dispositivos em formato de lista ou gráfico
+    
+    **Uso:**
+    1. Selecione a interface de rede a ser usada para a descoberta
+    2. Inicie a descoberta e aguarde os resultados
+    
+    **Notas:**
+    - A descoberta pode demorar dependendo do tamanho da rede
+    - Certifique-se de ter permissão para escanear a rede
+    """)
+
+elif tool == "📶 Ping & Traceroute":
+    st.header("📶 Ping & Traceroute")
+    st.markdown("""
+    ### 🚧 Em desenvolvimento
+    
+    Esta ferramenta permitirá testar a conectividade com dispositivos na rede e na internet.
+    
+    **Funcionalidades planejadas:**
+    - Teste de ping para verificar a disponibilidade de dispositivos
+    - Traceroute para mapear a rota até um dispositivo
+    - Exibição de estatísticas como tempo médio de resposta, perda de pacotes, etc.
+    
+    **Uso:**
+    1. Insira o endereço IP ou hostname do dispositivo a ser testado
+    2. Escolha o número de pacotes a serem enviados no teste de ping
+    3. Inicie o teste e aguarde os resultados
+    
+    **Notas:**
+    - O teste de ping pode ser bloqueado por firewalls ou configurações de rede
+    - Certifique-se de ter permissão para testar os dispositivos na rede
+    """)
+
+elif tool == "📊 Bandwidth Monitor":
+    st.header("📊 Bandwidth Monitor")
+    st.markdown("""
+    ### 🚧 Em desenvolvimento
+    
+    Esta ferramenta permitirá monitorar a largura de banda da rede em tempo real.
+    
+    **Funcionalidades planejadas:**
+    - Monitoramento da largura de banda de upload e download
+    - Exibição de gráficos em tempo real
+    - Registro de histórico de uso da largura de banda
+    
+    **Uso:**
+    1. Selecione a interface de rede a ser monitorada
+    2. Inicie o monitoramento e visualize os gráficos em tempo real
+    
+    **Notas:**
+    - O monitoramento contínuo pode gerar uma grande quantidade de dados
+    - Certifique-se de ter espaço suficiente em disco para o registro dos dados
+    """)
+
+elif tool == "📋 Network Info":
+    st.header("📋 Network Info")
+    st.markdown("""
+    ### 🚧 Em desenvolvimento
+    
+    Esta ferramenta permitirá visualizar informações detalhadas sobre a rede e dispositivos conectados.
+    
+    **Funcionalidades planejadas:**
+    - Exibição de informações da interface de rede (IP, máscara, gateway, DNS, etc.)
+    - Listagem de dispositivos conectados à mesma rede
+    - Exibição de rotas e tabelas de roteamento
+    
+    **Uso:**
+    1. Selecione a interface de rede a ser analisada
+    2. Visualize as informações detalhadas exibidas
+    
+    **Notas:**
+    - Algumas informações podem não estar disponíveis dependendo das configurações da rede e do sistema
+    - Certifique-se de ter permissão para visualizar as informações da rede
+    """)
+
+elif tool == "⚙️ Configurações":
+    st.header("⚙️ Configurações")
+    st.markdown("""
+    ### Ajustes e Preferências
+    
+    Esta seção permite ajustar configurações da aplicação e preferências do usuário.
+    
+    **Configurações disponíveis:**
+    - Idioma da aplicação
+    - Tema (claro/escuro)
+    - Configurações de rede (timeout, retries, etc.)
+    
+    **Como usar:**
+    1. Selecione as opções desejadas em cada configuração
+    2. As alterações serão aplicadas imediatamente
+    
+    **Notas:**
+    - Algumas configurações podem exigir reiniciar a aplicação para ter efeito
+    - Certifique-se de entender cada configuração antes de alterar
     """)
 
 # Sidebar com informações
