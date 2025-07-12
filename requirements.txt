@@ -1,13 +1,8 @@
 Flask
 streamlit
 scapy
-pydivert
-pyshark
-dnspython
 websockets
 flask-socketio 
-eventlet
-chart-studio 
 pandas
 matplotlib
 psutil
