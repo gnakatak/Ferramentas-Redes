@@ -1,7 +1,6 @@
 import subprocess
 import time
 import os
-import signal
 import sys
 
 # Caminhos relativos dos scripts
@@ -20,8 +19,7 @@ if not os.path.exists(FRONTEND_PATH):
 # Inicia o backend Flask
 print("Iniciando o backend Flask...")
 backend_process = subprocess.Popen(
-    ["python", "-m", "backend.server"],  # Melhor que chamar o arquivo direto
-    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+    ["python", "-m", "backend.server"]
 )
 
 # Aguarda o backend subir
@@ -30,8 +28,7 @@ time.sleep(3)
 # Inicia o frontend Streamlit
 print("Iniciando o frontend Streamlit...")
 frontend_process = subprocess.Popen(
-    ["streamlit", "run", FRONTEND_PATH],
-    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+    ["streamlit", "run", FRONTEND_PATH]
 )
 
 try:
