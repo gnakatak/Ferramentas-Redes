@@ -1,3 +1,4 @@
+## arquivos para ignorar no commit ##
 .venv
 venv
 __pycache__
