@@ -7,4 +7,3 @@ matplotlib
 flask
 streamlit
 speedtest-cli
-speedtest
