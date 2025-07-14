@@ -1,66 +1,57 @@
 import streamlit as st
 import requests
+from datetime import datetime
 
-def get_ipinfo_details(ip=None):
-    """Puxa dados da API ipinfo.io para o IP dado ou para o IP público da requisição."""
+# Função para obter dados do ipinfo.io para um IP específico
+@st.cache_data(ttl=3600)
+def get_ip_details(ip=None, token=None):
     base_url = "https://ipinfo.io"
     url = f"{base_url}/{ip}/json" if ip else f"{base_url}/json"
+    if token:
+        url += f"?token={token}"
     try:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        return {
-            "ip": data.get("ip", "N/A"),
-            "city": data.get("city", "N/A"),
-            "region": data.get("region", "N/A"),
-            "country": data.get("country", "N/A"),
-            "org": data.get("org", "N/A"),
-            "hostname": data.get("hostname", "N/A"),
-            "success": True,
-        }
+        return data
     except Exception as e:
-        st.error(f"Erro ao obter dados de ipinfo.io: {e}")
-        return {"success": False}
+        st.error(f"Erro ao buscar dados do ipinfo.io: {e}")
+        return {}
 
+# Função que injeta JS para capturar IP público do cliente via api.ipify.org
+def get_client_ip_js():
+    st.markdown("""
+    <script>
+    async function getIp() {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        window.parent.postMessage({func: 'setClientIp', ip: data.ip}, '*');
+    }
+    getIp();
+    </script>
+    """, unsafe_allow_html=True)
+
+# Função principal do visualizador
 def ip_viewer():
     st.title("🌍 Visualizador de IP e Localização com ipinfo.io")
 
-    # Dados do servidor (aplicação hospedada)
-    st.header("💻 Informações do Servidor da Aplicação")
-    server_info = get_ipinfo_details()
-    if server_info["success"]:
-        col1, col2, col3 = st.columns([2,1,1])
-        col1.metric("IP do Servidor", server_info["ip"])
-        col2.metric("País", server_info["country"])
-        col3.metric("Cidade", server_info["city"])
-        st.markdown(f"**Região:** {server_info['region']}")
-        st.markdown(f"**Hostname:** {server_info['hostname']}")
-        st.markdown(f"**Organização / ISP:** {server_info['org']}")
+    if "client_ip" not in st.session_state:
+        st.session_state["client_ip"] = None
+
+    get_client_ip_js()  # Injeta JS para pegar IP do cliente
+
+    # Aqui você pode colocar um input oculto para atualizar o IP no estado
+    client_ip = st.text_input("IP detectado (via JS):", key="client_ip", value=st.session_state["client_ip"])
+
+    if client_ip:
+        st.session_state["client_ip"] = client_ip
+        details = get_ip_details(client_ip)  # Consulta ipinfo com o IP do cliente
+        st.write(f"**IP:** {details.get('ip', 'N/A')}")
+        st.write(f"**Cidade:** {details.get('city', 'N/A')}")
+        st.write(f"**Região:** {details.get('region', 'N/A')}")
+        st.write(f"**País:** {details.get('country', 'N/A')}")
+        st.write(f"**Organização:** {details.get('org', 'N/A')}")
+        st.write(f"**Hostname:** {details.get('hostname', 'N/A')}")
+
     else:
-        st.error("Não foi possível obter as informações do servidor.")
-
-    st.markdown("---")
-
-    # Tenta descobrir IP do usuário a partir do query param 'client_ip' (se houver)
-    user_ip = st.query_params.get("client_ip", [None])[0]
-    if not user_ip:
-        # fallback: pegar o IP detectado pela própria API (ipinfo) sem especificar IP
-        user_ip = None
-
-    st.header("👤 Seu IP e Localização")
-    user_info = get_ipinfo_details(user_ip)
-    if user_info["success"]:
-        col1, col2, col3 = st.columns([2,1,1])
-        col1.metric("Seu IP Público", user_info["ip"])
-        col2.metric("País", user_info["country"])
-        col3.metric("Cidade", user_info["city"])
-        st.markdown(f"**Região:** {user_info['region']}")
-        st.markdown(f"**Hostname:** {user_info['hostname']}")
-        st.markdown(f"**Organização / ISP:** {user_info['org']}")
-    else:
-        st.error("Não foi possível obter as informações do seu IP.")
-
-    st.info(
-        "🔎 Dados obtidos pela API pública ipinfo.io. "
-        "A precisão depende do IP detectado e da infraestrutura da rede."
-    )
+        st.info("Detectando seu IP público via JavaScript...")
