@@ -1,57 +1,73 @@
 import streamlit as st
 import requests
-from datetime import datetime
 
-# Função para obter dados do ipinfo.io para um IP específico
-@st.cache_data(ttl=3600)
-def get_ip_details(ip=None, token=None):
-    base_url = "https://ipinfo.io"
-    url = f"{base_url}/{ip}/json" if ip else f"{base_url}/json"
-    if token:
-        url += f"?token={token}"
-    try:
-        resp = requests.get(url, timeout=5)
-        resp.raise_for_status()
-        data = resp.json()
-        return data
-    except Exception as e:
-        st.error(f"Erro ao buscar dados do ipinfo.io: {e}")
-        return {}
-
-# Função que injeta JS para capturar IP público do cliente via api.ipify.org
-def get_client_ip_js():
-    st.markdown("""
-    <script>
-    async function getIp() {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        window.parent.postMessage({func: 'setClientIp', ip: data.ip}, '*');
-    }
-    getIp();
-    </script>
-    """, unsafe_allow_html=True)
-
-# Função principal do visualizador
 def ip_viewer():
-    st.title("🌍 Visualizador de IP e Localização com ipinfo.io")
+    # Injeta JS para detectar IP do cliente e salvar em st.session_state.client_ip (sem input visível)
+    ip_detect_js = """
+    <script>
+    async function getClientIP() {
+    try {
+        const res = await fetch('https://api64.ipify.org?format=json');
+        const data = await res.json();
+        const ip = data.ip;
+        // Envia para Streamlit via evento de input
+        const streamlit_input = window.parent.document.querySelector('input#client_ip_setter');
+        if (streamlit_input) {
+            streamlit_input.value = ip;
+            streamlit_input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    } catch(e) {
+        console.log('Erro ao obter IP:', e);
+    }
+    }
+    getClientIP();
+    </script>
+    """
 
-    if "client_ip" not in st.session_state:
-        st.session_state["client_ip"] = None
+    st.markdown(ip_detect_js, unsafe_allow_html=True)
 
-    get_client_ip_js()  # Injeta JS para pegar IP do cliente
+    # Campo oculto pra receber o IP detectado via JS (input escondido via CSS)
+    st.markdown(
+        """
+        <style>
+        input#client_ip_setter {
+            display:none;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    ip_from_js = st.text_input("", key="client_ip_setter")
 
-    # Aqui você pode colocar um input oculto para atualizar o IP no estado
-    client_ip = st.text_input("IP detectado (via JS):", key="client_ip", value=st.session_state["client_ip"])
+    # Salva o IP detectado na sessão, se mudou
+    if ip_from_js and ip_from_js != st.session_state.get("client_ip", ""):
+        st.session_state.client_ip = ip_from_js
 
-    if client_ip:
-        st.session_state["client_ip"] = client_ip
-        details = get_ip_details(client_ip)  # Consulta ipinfo com o IP do cliente
-        st.write(f"**IP:** {details.get('ip', 'N/A')}")
-        st.write(f"**Cidade:** {details.get('city', 'N/A')}")
-        st.write(f"**Região:** {details.get('region', 'N/A')}")
-        st.write(f"**País:** {details.get('country', 'N/A')}")
-        st.write(f"**Organização:** {details.get('org', 'N/A')}")
-        st.write(f"**Hostname:** {details.get('hostname', 'N/A')}")
+    st.title("Visualizador de IP")
 
+    st.write("**IP detectado automaticamente:**", st.session_state.get("client_ip", "Não detectado"))
+
+    # Input para o usuário digitar manualmente o IP
+    manual_ip = st.text_input("Digite um IP para consultar (opcional):")
+
+    # Decide qual IP consultar: manual > detectado
+    ip_para_consultar = manual_ip.strip() if manual_ip.strip() else st.session_state.get("client_ip")
+
+    st.write("IP a ser consultado:", ip_para_consultar if ip_para_consultar else "Nenhum IP válido")
+
+    # Consulta a API ipinfo.io para o IP selecionado
+    if ip_para_consultar:
+        try:
+            response = requests.get(f"https://ipinfo.io/{ip_para_consultar}/json", timeout=5)
+            data = response.json()
+            st.write("### Resultado da consulta:")
+            st.write(f"- IP: {data.get('ip', 'N/A')}")
+            st.write(f"- Cidade: {data.get('city', 'N/A')}")
+            st.write(f"- Região: {data.get('region', 'N/A')}")
+            st.write(f"- País: {data.get('country', 'N/A')}")
+            st.write(f"- Organização: {data.get('org', 'N/A')}")
+            st.write(f"- Hostname: {data.get('hostname', 'N/A')}")
+        except Exception as e:
+            st.error(f"Erro ao consultar IP info: {e}")
     else:
-        st.info("Detectando seu IP público via JavaScript...")
+        st.info("Digite um IP para consultar ou aguarde a detecção automática.")
