@@ -51,27 +51,42 @@ def port_scanner_page():
 
 def about_page():
     reset_speedtest_state()
-    st.title("Sobre Nós")
-    st.write("Informações sobre o projeto e a equipe.")
+    st.title("👨‍💻 Sobre o Projeto")
+    st.write("""
+        Ferramentas de Rede é uma aplicação web interativa desenvolvida com Python e Streamlit, que reúne diversas ferramentas úteis para análise, teste e visualização de redes em um só lugar.
+        Ela foi criada com foco em educação prática, demonstração de conceitos de redes e facilidade de uso, sendo ideal para estudantes, professores e entusiastas da área.
+        Com uma interface intuitiva e organização modular, o projeto é de fácil manutenção e expansão por colaboradores da comunidade.
+    """)
 
 st.sidebar.title("Navegação")
-page = st.sidebar.radio("Escolha uma página:", ["Início", "Dashboard", "SpeedTest", "Traceroute", "Chat", "Postman", "Whois", "Port Scanner", "Sobre"])
+page = st.sidebar.radio("📌 Escolha uma página:", [
+    "🏠 Início",
+    "📊 Dashboard",
+    "⚡ SpeedTest",
+    "🗺️ Traceroute",
+    "💬 Chat",
+    "📬 Postman",
+    "🔍 Whois",
+    "🛡️ Port Scanner",
+    "ℹ️ Sobre"
+])
 
-if page == "Início":
-    homepage()
-elif page == "Dashboard":
-    dashboard_page()
-elif page == "SpeedTest":
-    speedtest_page()
-elif page == "Traceroute":
-    traceroute_page()
-elif page == "Chat":
-    chat_page()
-elif page == "Postman":
-    postman_page()
-elif page == "Whois":
-    whois_page()
-elif page == "Port Scanner":
-    port_scanner_page()
-elif page == "Sobre":
-    about_page()
+match page:
+    case "🏠 Início":
+        homepage()
+    case "📊 Dashboard":
+        dashboard_page()
+    case "⚡ SpeedTest":
+        speedtest_page()
+    case "🗺️ Traceroute":
+        traceroute_page()
+    case "💬 Chat":
+        chat_page()
+    case "📬 Postman":
+        postman_page()
+    case "🔍 Whois":
+        whois_page()
+    case "🛡️ Port Scanner":
+        port_scanner_page()
+    case "ℹ️ Sobre":
+        about_page()
