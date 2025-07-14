@@ -4,7 +4,7 @@ import subprocess
 import re
 import pandas as pd
 import time
-import shutil
+import shutil # Importe shutil
 
 def traceroute_dev():
     def contar_saltos(destino, max_saltos=30):
@@ -42,24 +42,36 @@ def traceroute_dev():
                     hop_num = re.match(r"^\s*(\d+)", linha).group(1)
                     
                     if sistema == "windows":
+                        # Regex para Windows: busca latências, hostname e IP (opcional)
                         match = re.search(r"((\d+\s+ms|\<\d+\s+ms|\*)\s+(\d+\s+ms|\<\d+\s+ms|\*)\s+(\d+\s+ms|\<\d+\s+ms|\*))\s+(.+?)(?:\s+\[(\d+\.\d+\.\d+\.\d+)\]|$)", linha)
                         if match:
-                            latency_str, latency1, _, _, tail, ip = match.groups()
+                            # Atraso pode ser '<1 ms' ou um número
+                            latency1 = match.group(2)
+                            hostname = match.group(5).strip()
+                            ip = match.group(6)
+                            
                             latency = latency1 if latency1 != "*" else "Timeout"
-                            hostname = tail.strip() if tail else "N/A"
-                            ip = ip if ip else (hostname if re.match(r"\d+\.\d+\.\d+\.\d+", hostname) else "N/A")
-                            if ip == "N/A" and hostname == "N/A":
-                                continue
+                            
+                            # Se o hostname for um IP e não houver IP explícito, use o hostname como IP
+                            if not ip and re.match(r"\d+\.\d+\.\d+\.\d+", hostname):
+                                ip = hostname
+                                hostname = "N/A" # Ou manter o IP como hostname, dependendo da preferência
+                            elif not ip:
+                                ip = "N/A"
+
                             hops.append({"Hop": hop_num, "Hostname": hostname, "IP": ip, "Latency": latency})
                         else:
+                            # Se não houver match completo, ainda adicione o salto para mostrar o número
                             hops.append({"Hop": hop_num, "Hostname": "N/A", "IP": "N/A", "Latency": "Timeout"})
-                    else:
+                    else: # Linux/macOS
+                        # Regex para Linux/macOS: busca hostname, IP e latência
                         match = re.search(r"(\S+)\s+\((\d+\.\d+\.\d+\.\d+)\)\s+(\d+\.\d+\s+ms|\*)", linha)
                         if match:
                             hostname, ip, latency = match.groups()
                             latency = latency if latency != "*" else "Timeout"
                             hops.append({"Hop": hop_num, "Hostname": hostname, "IP": ip, "Latency": latency})
                         else:
+                            # Se não houver match completo (ex: linha com apenas * * *)
                             hops.append({"Hop": hop_num, "Hostname": "N/A", "IP": "N/A", "Latency": "Timeout"})
                     
                     if hops:
@@ -72,8 +84,10 @@ def traceroute_dev():
                 return hops, f"Erro ao executar o comando:\n{erro}"
             
             return hops, None
+        except FileNotFoundError:
+            return None, f"Erro: Comando '{cmd_name}' não encontrado. Certifique-se de que está instalado e no PATH."
         except Exception as e:
-            return None, f"Erro: {str(e)}"
+            return None, f"Erro inesperado: {str(e)}"
 
     st.title("Traceroute em Tempo Real com Streamlit")
     st.write("Digite o destino para rastrear o caminho da rede (exemplo: google.com).")

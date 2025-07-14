@@ -2,7 +2,7 @@ import os
 import platform
 import subprocess
 import re
-import shutil
+import shutil # Importe shutil
 
 def ping(host='8.8.8.8', count=4):
     system = platform.system().lower()
@@ -27,8 +27,9 @@ def ping(host='8.8.8.8', count=4):
     try:
         output = subprocess.check_output(cmd, encoding=encoding)
 
+        # Normaliza o espaçamento e substitui vírgulas para facilitar o regex
         output = re.sub(r'([=\d]+)ms', r'\1 ms', output)
-        output = output.replace(',', '   ')
+        output = output.replace(',', '   ') # Ajusta para o regex subsequente
 
         min_latency = max_latency = avg_latency = None
 
@@ -41,8 +42,8 @@ def ping(host='8.8.8.8', count=4):
                 min_latency = int(match.group(1))
                 max_latency = int(match.group(2))
                 avg_latency = int(match.group(3))
-        else:
-            match = re.search(r'=\s*([\d.]+)/([\d.]+)/([\d.]+)/', output)
+        else: # Linux/macOS
+            match = re.search(r'=\s*([\d.]+)/([\d.]+)/([\d.]+)/', output) # min/avg/max
             if match:
                 min_latency = float(match.group(1))
                 avg_latency = float(match.group(2))
@@ -59,9 +60,26 @@ def ping(host='8.8.8.8', count=4):
         }
 
     except subprocess.CalledProcessError as e:
+        # Se o ping falhar (ex: host inacessível)
         return {
             "success": False,
             "host": host,
             "count": count,
-            "error": str(e)
+            "error": f"Erro ao executar o ping: {e.stderr if e.stderr else e.output}"
+        }
+    except FileNotFoundError:
+        # Este erro seria pego pelo shutil.which(), mas é bom ter uma redundância
+        return {
+            "success": False,
+            "host": host,
+            "count": count,
+            "error": "Comando 'ping' não encontrado. Certifique-se de que está instalado e no PATH."
+        }
+    except Exception as e:
+        # Captura outros erros inesperados
+        return {
+            "success": False,
+            "host": host,
+            "count": count,
+            "error": f"Erro inesperado: {str(e)}"
         }

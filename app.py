@@ -17,26 +17,26 @@ def reset_speedtest_state():
 
 # Funções para simular as páginas
 def homepage():
-    reset_speedtest_state()
+    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
     st.title("Olá Streamlit")
 
 def dashboard_page():
-    reset_speedtest_state()
+    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
     dashboard.render_dashboard() 
 
 def speedtest_page():
     speedtest_module.speedtest_teste()
 
 def traceroute_page():
-    reset_speedtest_state()
+    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
     traceroute_dev.traceroute_dev()
 
 def chat_page():
-    reset_speedtest_state()
+    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
     chat.chat_dev()
 
 def about_page():
-    reset_speedtest_state()
+    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
     st.title("Sobre Nós")
     st.write("Informações sobre o projeto e a equipe.")
 

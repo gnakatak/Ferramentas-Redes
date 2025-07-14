@@ -26,9 +26,9 @@ def speedtest_teste():
     def testar_velocidade():
         try:
             with st.spinner("Realizando teste de velocidade..."):
-                stt = speedtest.Speedtest(timeout=30)  # Timeout explícito
+                stt = speedtest.Speedtest(timeout=30)
                 logger.info("Selecionando melhor servidor...")
-                stt.get_best_server()  # Tenta selecionar o melhor servidor
+                stt.get_best_server()
                 logger.info(f"Servidor selecionado: {stt.results.server['host']}")
                 
                 logger.info("Testando download...")

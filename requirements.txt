@@ -5,3 +5,5 @@ matplotlib
 flask
 streamlit
 speedtest-cli
+streamlit-extras
+streamlit-autorefresh

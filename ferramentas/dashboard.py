@@ -1,5 +1,5 @@
 import streamlit as st
-from ferramentas.ping import ping
+from ferramentas.ping import ping # Importe a função ping do módulo ping
 
 def render_dashboard():
     st.title("Página do Dashboard")
