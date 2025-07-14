@@ -25,11 +25,39 @@ def get_ipinfo_details(ip=None):
 def ip_viewer():
     st.title("🌍 Visualizador de IP e Localização com ipinfo.io")
 
-    # Dados do servidor (aplicação hospedada)
+    # --- Injeção de JavaScript para detectar IP real do cliente ---
+    st.markdown("""
+    <script>
+    (async function() {
+        const res = await fetch('https://api64.ipify.org?format=json');
+        const data = await res.json();
+        const ip = data.ip;
+        const input = window.parent.document.querySelector("input#client_ip_hidden");
+        if (input) {
+            input.value = ip;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    })();
+    </script>
+    """, unsafe_allow_html=True)
+
+    # Campo oculto para salvar o IP detectado pelo JS
+    st.markdown("""
+    <style>
+    input#client_ip_hidden { display: none; }
+    </style>
+    """, unsafe_allow_html=True)
+    client_ip = st.text_input("", key="client_ip_hidden")
+
+    # Armazena na sessão
+    if client_ip:
+        st.session_state["client_ip"] = client_ip
+
+    # --- Seção 1: Informações do servidor ---
     st.header("💻 Informações do Servidor da Aplicação")
     server_info = get_ipinfo_details()
     if server_info["success"]:
-        col1, col2, col3 = st.columns([2,1,1])
+        col1, col2, col3 = st.columns([2, 1, 1])
         col1.metric("IP do Servidor", server_info["ip"])
         col2.metric("País", server_info["country"])
         col3.metric("Cidade", server_info["city"])
@@ -41,16 +69,13 @@ def ip_viewer():
 
     st.markdown("---")
 
-    # Tenta descobrir IP do usuário a partir do query param 'client_ip' (se houver)
-    user_ip = st.query_params.get("client_ip", [None])[0]
-    if not user_ip:
-        # fallback: pegar o IP detectado pela própria API (ipinfo) sem especificar IP
-        user_ip = None
-
+    # --- Seção 2: Informações do Usuário ---
     st.header("👤 Seu IP e Localização")
+    user_ip = st.session_state.get("client_ip")
     user_info = get_ipinfo_details(user_ip)
+
     if user_info["success"]:
-        col1, col2, col3 = st.columns([2,1,1])
+        col1, col2, col3 = st.columns([2, 1, 1])
         col1.metric("Seu IP Público", user_info["ip"])
         col2.metric("País", user_info["country"])
         col3.metric("Cidade", user_info["city"])
@@ -60,7 +85,5 @@ def ip_viewer():
     else:
         st.error("Não foi possível obter as informações do seu IP.")
 
-    st.info(
-        "🔎 Dados obtidos pela API pública ipinfo.io. "
-        "A precisão depende do IP detectado e da infraestrutura da rede."
-    )
+    st.info("🔎 Dados obtidos pela API pública ipinfo.io. "
+            "A precisão depende do IP detectado e da infraestrutura da rede.")
