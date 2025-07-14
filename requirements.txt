@@ -1,7 +1,5 @@
 streamlit
 scapy
-websockets
-flask-socketio 
 pandas
 matplotlib
 flask
