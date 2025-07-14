@@ -1,231 +1,149 @@
-````markdown
-# Estrutura do Projeto: Ferramentas-Redes
+# 🌐 Ferramentas de Rede
 
-Este projeto tem como objetivo criar uma aplicação com diversas ferramentas voltadas para o ensino e demonstração prática de conceitos de redes de computadores. Abaixo, está detalhada toda a estrutura do projeto com explicações para que qualquer pessoa possa entender facilmente onde e como contribuir.
+Este projeto visa consolidar diversas ferramentas úteis para **análise e monitoramento de redes** em uma única **aplicação web interativa**, desenvolvida com **Streamlit**. É uma plataforma ideal para **educação**, **demonstração de conceitos de rede** e **uso prático no dia a dia**.
 
-## 🗂  Estrutura Geral
+---
 
-```bash
+## 🗂 Estrutura do Projeto
+
+A estrutura do projeto foi simplificada e focada na organização das ferramentas em um único diretório:
+
 Ferramentas-Redes/
-├── backend/               # Servidor Flask e lógica das ferramentas
-│   ├── ferramentas/       # Ferramentas do sistema divididas por funcionalidade
-│   │   ├── firewall/      # Ferramenta de firewall
-│   │   │ 
-│   │   ├── metrics/       # Ferramentas para métricas de rede
-│   │   │ 
-│   │   ├── mini_chat/     # Ferramenta de chat
-│   │   │ 
-│   │   ├── sniffer/       # Ferramenta sniffer de pacotes
-│   │   │ 
-│   │   ├── routes.py      # Rotas do backend
-│   │   ├── server.py      # Onde vai rodar o backend
-│   │   └── utils.py       # Utilitários do backend
-│
-├── frontend/              # Interface do usuário com Streamlit
-│   ├── static/            # Arquivos estáticos (imagens, css, js)
-│   ├── utils/             # Utilitários do frontend
-│   │   ├── app.py
-│   │   ├── dashboard.py
-│   ├── README.md
-│
-├── requirements.txt       # Lista de bibliotecas necessárias
-├── README.md              # Documentação principal do projeto
-├── run_all.py             # Script para iniciar frontend e backend simultaneamente
-└── .gitignore             # Arquivos ignorados pelo Git
-````
+├── app.py # Arquivo principal da aplicação Streamlit
+├── requirements.txt # Lista de bibliotecas Python necessárias
+├── .devcontainer/ # Configurações para ambientes de desenvolvimento (VS Code)
+│ └── devcontainer.json
+├── ferramentas/ # Módulos de cada ferramenta de rede
+│ ├── init.py
+│ ├── chat.py
+│ ├── dashboard.py
+│ ├── port_scanner.py
+│ ├── postman.py
+│ ├── speedtest_module.py
+│ ├── traceroute_dev.py
+│ ├── visualizador_ip.py
+│ └── whois_module.py
+├── README.md # Este arquivo de documentação
+├── chat.db # Banco de dados SQLite do chat
+└── .gitignore # Arquivos e pastas ignorados pelo Git
+
+yaml
+Copiar
+Editar
 
 ---
 
-## Arquivos e Pastas
+## 🚀 Como Executar o Projeto
 
-### 📅 app.py
+### ✅ Pré-requisitos
 
-* Arquivo principal da aplicação.
-* Responsável por iniciar o servidor Flask e integrar o frontend (Streamlit) com o backend.
+- Python 3.x instalado na máquina
 
-### 📅 requirements.txt
-
-* Lista todas as dependências do projeto.
-* Use `pip install -r requirements.txt` para instalar.
-
-### 📅 README.md
-
-* Contém as instruções gerais do projeto, incluindo estrutura, instalação, execução e explicação de pastas (como este texto).
-
----
-
-## 📚 frontend/
-
-* Contém os componentes visuais e a interface com o usuário usando Streamlit.
-
-
-#### static/
-
-* Guarda arquivos estáticos como imagens, CSS customizado ou JavaScript opcional.
-
-#### utils/
-
-* Funções auxiliares para manipulação de dados ou layout.
-
----
-
-## 📁 backend/
-
-* Lógica de negócio, regras de firewall, captura de pacotes, chat, métricas de rede etc.
-
-#### routes.py
-
-* Define os endpoints (rotas) para comunicação entre frontend e backend (via HTTP ou WebSocket).
-
-#### utils.py
-
-* Funções reutilizáveis para o backend inteiro (ex: logs, manipulação de strings, validações).
-
----
-
-## 📂 services/
-
-* Cada subpasta representa uma "ferramenta" distinta do sistema.
-
-### 🔐 firewall/
-
-* Implementa um firewall personalizado em Python.
-
-Arquivos:
-
-* `firewall.py`: lógica principal de interceptação e bloqueio de pacotes.
-* `rules.json`: armazena as regras configuradas (IPs bloqueados, portas, protocolos).
-* `utils.py`: auxiliares como validação de IPs, leitura de regras, etc.
-
-### 📡 sniffer/
-
-* Sniffer de pacotes da rede.
-
-Arquivos:
-
-* `sniffer.py`: captura pacotes e exibe dados como origem, destino, protocolo e payload.
-
-### 💬 mini\_chat/
-
-* Módulo de chat em tempo real usando WebSockets.
-
-Arquivos:
-
-* `chat_server.py`: gerencia conexões, mensagens e canais.
-
-### 📊 metrics/
-
-* Ferramentas para medir desempenho da rede.
-
-Arquivos:
-
-* `ping.py`: envia pings e calcula latência.
-* `throughput.py`: simula transferências para medir vazão da rede.
-
----
-
-## ✨ Boas práticas
-
-* Sempre que for adicionar uma nova funcionalidade:
-
-  * Crie um novo arquivo ou funcão em `services`.
-  * Exporte-a via `routes.py` ou chame via `dashboard.py`.
-* Evite deixar código duplicado. Utilize `utils.py`.
-* Atualize o `README.md` conforme modificações relevantes no projeto.
-
----
-
-Com esta estrutura clara e modular, você e seus colegas podem colaborar com facilidade, criando novas ferramentas ou expandindo as existentes de forma organizada.
-
-## 📦 Bibliotecas utilizadas no projeto Ferramentas-Redes
-
-As seguintes bibliotecas são utilizadas para construir e executar as funcionalidades do projeto. Todas podem ser instaladas com o comando:
+### 📥 Clone o Repositório
 
 ```bash
+git clone "https://github.com/gnakatak/Ferramentas-Redes/tree/main"
+cd Ferramentas-Redes
+🧪 Crie e Ative um Ambiente Virtual (Recomendado)
+bash
+Copiar
+Editar
+python -m venv venv
+
+# No Windows:
+.\venv\Scripts\activate
+
+# No macOS/Linux:
+source venv/bin/activate
+📦 Instale as Dependências
+bash
+Copiar
+Editar
 pip install -r requirements.txt
-```
+▶️ Execute a Aplicação
+bash
+Copiar
+Editar
+streamlit run app.py
+A aplicação será aberta automaticamente no navegador em: http://localhost:8501
 
-### Lista de dependências:
+📦 Dependências do Projeto
+O projeto depende das seguintes bibliotecas:
 
-* `flask` — Servidor backend para integração com o frontend.
-* `streamlit` — Criação de interfaces gráficas interativas usando Python.
-* `scapy` — Captura, construção e manipulação de pacotes de rede.
-* `pydivert` — Interface Python para o WinDivert (firewall no Windows).
-* `pyshark` — Sniffer de pacotes baseado em tshark (alternativa ao scapy).
-* `dnspython` — Biblioteca para manipulação e consulta de DNS.
-* `websockets` — Comunicação em tempo real via WebSocket puro.
-* `flask-socketio` — Integração de WebSocket com Flask.
-* `eventlet` — Mecanismo assíncrono usado pelo Flask-SocketIO.
-* `chart-studio` — Visualização de gráficos interativos (opcional).
-* `pandas` — Manipulação e análise de dados estruturados.
-* `matplotlib` — Geração de gráficos no backend.
-* `psutil` — Monitoramento de recursos do sistema (CPU, memória, rede).
-* `netifaces` — Leitura das interfaces de rede do sistema.
+streamlit – Aplicações web interativas
 
----
+pandas – Manipulação e análise de dados
 
-## 🚀 Executando o Projeto
+speedtest-cli – Testes de velocidade de internet
 
-O projeto Ferramentas-Redes é composto por dois componentes principais:
+streamlit-extras, streamlit-autorefresh – Componentes extras e atualização automática
 
-* 🧠 **Backend**: Servidor Flask responsável pela lógica das ferramentas e pela API.
-* 🎨 **Frontend**: Interface de usuário interativa feita com Streamlit.
+python-whois – Consulta WHOIS de domínios
 
----
+requests – Requisições HTTP
 
-### 📦 Pré-requisitos
+certifi, urllib3 – Requisições HTTPS seguras
 
-Certifique-se de que todas as dependências estejam instaladas com o comando abaixo:
+Módulos padrão do Python:
 
-```bash
-pip install -r requirements.txt
-```
+socket, sqlite3, datetime, time, logging, platform, subprocess, re, shutil
 
----
+🛠 Ferramentas Incluídas
+🌍 Visualizador de IP e Localização (visualizador_ip.py)
+Exibe o IP público do usuário e informações de geolocalização via ipinfo.io.
 
-### ▶️ Execução Automatizada
+get_ipinfo_details(ip=None) – Faz requisição à API para obter os dados.
 
-Para facilitar o desenvolvimento, você pode iniciar o frontend e backend ao mesmo tempo com um único comando:
+ip_viewer() – Renderiza os dados no Streamlit.
 
-```bash
-python run_all.py
-```
+⚡ SpeedTest (speedtest_module.py)
+Testa velocidade de download, upload e ping. Permite monitoramento contínuo com gráficos.
 
-Esse script iniciará o servidor Flask e, em seguida, o Streamlit automaticamente. Pressione Ctrl+C para encerrar ambos.
+testar_velocidade() – Executa os testes e salva no st.session_state.
 
----
+🗺️ Traceroute (traceroute_dev.py)
+Rastreia o caminho dos pacotes até um destino, exibindo IPs, nomes e latência de cada salto.
 
-### ▶️ Execução Manual
+contar_saltos(destino, max_saltos) – Usa traceroute ou tracert via subprocesso.
 
-Abra dois terminais (ou duas abas/painéis no terminal).
+💬 Chat em Tempo Real (chat.py)
+Mini-chat com persistência em banco de dados SQLite.
 
-#### 1️⃣ Terminal 1: Executar o servidor Flask (Backend)
+init_db() – Inicializa as tabelas
 
-```bash
-python backend/server.py
-```
+add_message() / get_messages() – Insere e recupera mensagens
 
-Este comando iniciará o backend na URL:
+manage_user() / get_active_users() – Gerencia usuários conectados
 
-```
-http://localhost:5000
-```
+📬 Requisições HTTP (Postman-like) (postman.py)
+Permite requisições HTTP GET, POST, PUT e DELETE com customização de headers e body.
 
-#### 2️⃣ Terminal 2: Executar a interface Streamlit (Frontend)
+Interface com campos para URL, headers, body (em JSON)
 
-```bash
-streamlit run frontend/app.py
-```
+Mostra resposta formatada (ou texto puro)
 
-Este comando abrirá automaticamente o frontend no navegador em:
+📑 Consulta WHOIS + Localização (whois_module.py)
+Consulta dados WHOIS de domínios e localização geográfica do IP resolvido.
 
-```
-http://localhost:8501
-```
+Usa python-whois e ipinfo.io
 
----
+Resolve IP via API DNS do Google (https://dns.google/resolve)
 
-✅ A interface do usuário se comunica com o backend via HTTP e WebSockets, dependendo da ferramenta em uso.
+🛡️ Verificador de Portas (port_scanner.py)
+Escaneia portas TCP abertas em um host/domínio.
 
-```
-```
+scan_port(host, port, timeout) – Tenta conectar via socket
+
+get_common_service(port) – Retorna o nome do serviço padrão da porta
+
+✨ Boas Práticas e Colaboração
+Modularização: Cada ferramenta em seu módulo próprio na pasta ferramentas/.
+
+Reuso: Use funções auxiliares e componentes compartilháveis para evitar repetição.
+
+Documentação: Mantenha este README.md atualizado.
+
+Sessão Limpa: A função reset_speedtest_state() limpa estados persistentes no SpeedTest.
+
+🤝 Contribuições
+Pull requests são bem-vindos! Para grandes mudanças, abra uma issue antes para discutir o que você gostaria de alterar.

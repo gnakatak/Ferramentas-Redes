@@ -3,7 +3,6 @@ from ferramentas import dashboard, speedtest_module, traceroute_dev, chat, visua
 
 st.set_page_config(page_title="Ferramentas de Rede", layout="centered")
 
-# Função para resetar estados do SpeedTest
 def reset_speedtest_state():
     if "dados" in st.session_state:
         del st.session_state.dados
@@ -14,13 +13,11 @@ def reset_speedtest_state():
     if "proximo_teste" in st.session_state:
         del st.session_state.proximo_teste
 
-# Função para a página inicial
 def homepage():
     reset_speedtest_state()
     st.title("Bem-vindo às Ferramentas de Rede")
     st.write("Explore ferramentas para monitoramento de rede, como SpeedTest, Traceroute e Chat em tempo real.")
     
-    # Chamar o visualizador de IP
     visualizador_ip.ip_viewer()
 
 def dashboard_page():
@@ -57,7 +54,6 @@ def about_page():
     st.title("Sobre Nós")
     st.write("Informações sobre o projeto e a equipe.")
 
-# Lógica de Navegação na Barra Lateral
 st.sidebar.title("Navegação")
 page = st.sidebar.radio("Escolha uma página:", ["Início", "Dashboard", "SpeedTest", "Traceroute", "Chat", "Postman", "Whois", "Port Scanner", "Sobre"])
 
