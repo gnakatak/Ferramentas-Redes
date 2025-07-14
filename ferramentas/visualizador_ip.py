@@ -2,29 +2,35 @@ import streamlit as st
 import requests
 
 def ip_viewer():
-    """Renderiza um visualizador de IP público, país e cidade do usuário."""
+    """Renderiza um visualizador de IP público, país, cidade e IPs adicionais."""
     st.subheader("📍 Seu Endereço IP e Localização")
-    st.write("Aqui você pode ver seu endereço IP público, o país e a cidade associados (baseados em dados de geolocalização não invasivos).")
+    st.write("Aqui você pode ver seu endereço IP público, o país, a cidade e quaisquer IPs adicionais (como proxies) associados (baseados em dados de geolocalização não invasivos).")
 
     def get_client_ip():
-        """Tenta obter o IP do cliente via headers ou API externa."""
+        """Tenta obter o IP principal do cliente e IPs adicionais via headers ou API externa."""
         try:
             # Tenta obter o IP via headers do Streamlit
             headers = st.context.headers if hasattr(st, 'context') else {}
-            ip_address = headers.get("X-Forwarded-For", None)
-            if ip_address and ip_address != "Unknown":
-                st.write(f"[Debug] IP obtido via X-Forwarded-For: {ip_address}")
-                return ip_address
+            x_forwarded_for = headers.get("X-Forwarded-For", None)
+            if x_forwarded_for and x_forwarded_for != "Unknown":
+                # Dividir IPs em uma lista, removendo espaços
+                ip_list = [ip.strip() for ip in x_forwarded_for.split(",")]
+                primary_ip = ip_list[0]  # Primeiro IP é o cliente
+                additional_ips = ip_list[1:] if len(ip_list) > 1 else []
+                st.write(f"[Debug] IP principal via X-Forwarded-For: {primary_ip}")
+                if additional_ips:
+                    st.write(f"[Debug] IPs adicionais: {additional_ips}")
+                return primary_ip, additional_ips
 
             # Fallback: usar ipify.org para obter o IP público
             response = requests.get("https://api.ipify.org", timeout=5)
             response.raise_for_status()
-            ip_address = response.text.strip()
-            st.write(f"[Debug] IP obtido via ipify.org: {ip_address}")
-            return ip_address
+            primary_ip = response.text.strip()
+            st.write(f"[Debug] IP obtido via ipify.org: {primary_ip}")
+            return primary_ip, []
         except Exception as e:
             st.write(f"[Debug] Erro ao obter IP: {str(e)}")
-            return "Unknown"
+            return "Unknown", []
 
     def get_city_and_country(ip_address):
         """Obtém a cidade e o país associados ao IP usando ip-api.com."""
@@ -47,20 +53,25 @@ def ip_viewer():
             return "N/A", "N/A"
 
     try:
-        # Obter IP, cidade e país
-        ip_address = get_client_ip()
-        city, country = get_city_and_country(ip_address)
+        # Obter IP principal e IPs adicionais
+        primary_ip, additional_ips = get_client_ip()
+        city, country = get_city_and_country(primary_ip)
 
-        # Exibir IP, país e cidade em três colunas com tamanhos ajustados
+        # Exibir IP principal, país e cidade em três colunas com tamanhos ajustados
         col1, col2, col3 = st.columns([2, 1, 1])  # Maior espaço para IP
         with col1:
-            st.metric(label="Seu IP Público", value=ip_address)
+            st.metric(label="Seu IP Público", value=primary_ip)
         with col2:
             st.metric(label="País", value=country)
         with col3:
             st.metric(label="Cidade", value=city)
 
-        if ip_address == "Unknown":
+        # Exibir IPs adicionais (se houver) abaixo
+        if additional_ips:
+            st.write("**IPs Adicionais (Proxies):**")
+            st.text(", ".join(additional_ips))
+
+        if primary_ip == "Unknown":
             st.error("Não foi possível obter o endereço IP.")
         else:
             st.info("Nota: Usamos serviços de geolocalização (ip-api.com e ipify.org) para estimar sua cidade e país com base no IP. Nenhum dado pessoal é armazenado.")
