@@ -32,9 +32,9 @@ def speedtest_teste():
                 logger.info(f"Servidor selecionado: {stt.results.server['host']}")
                 
                 logger.info("Testando download...")
-                download = stt.download() / 10_000_000
+                download = stt.download() / 1_000_000
                 logger.info("Testando upload...")
-                upload = stt.upload() / 10_000_000
+                upload = stt.upload() / 1_000_000
                 logger.info("Testando ping...")
                 ping = stt.results.ping
                 agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
