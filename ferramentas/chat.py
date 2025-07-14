@@ -19,10 +19,8 @@ def emojify(text):
 # Initialize SQLite database
 def init_db():
     """Inicializa e conecta ao banco de dados SQLite."""
-    # check_same_thread=False é crucial para SQLite em ambientes multi-thread como o Streamlit
     conn = sqlite3.connect("chat.db", check_same_thread=False)
     c = conn.cursor()
-    # Tabela para armazenar as mensagens do chat
     c.execute("""
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +30,6 @@ def init_db():
             is_system BOOLEAN
         )
     """)
-    # Tabela para rastrear usuários ativos
     c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
@@ -48,7 +45,6 @@ def manage_user(username, action="add"):
     conn = st.session_state.db
     c = conn.cursor()
     if action == "add":
-        # INSERT OR IGNORE para evitar duplicatas se o usuário já existir
         c.execute("INSERT OR IGNORE INTO users (username, last_active) VALUES (?, ?)",
                   (username, datetime.now()))
     elif action == "remove":
@@ -62,7 +58,7 @@ def add_message(user, message, is_system=False):
     """Adiciona uma nova mensagem ao banco de dados."""
     conn = st.session_state.db
     c = conn.cursor()
-    timestamp = datetime.now().strftime("%H:%M") # Formato de hora:minuto
+    timestamp = datetime.now().strftime("%H:%M")
     c.execute("INSERT INTO messages (user, message, timestamp, is_system) VALUES (?, ?, ?, ?)",
               (user, message, timestamp, is_system))
     conn.commit()
@@ -94,7 +90,7 @@ def cleanup_users():
     inactive_users = [row[0] for row in c.fetchall()]
     for user in inactive_users:
         c.execute("DELETE FROM users WHERE username = ?", (user,))
-        add_message("Sistema", f"{user} saiu do chat.", is_system=True) # Registra a saída
+        add_message("Sistema", f"{user} saiu do chat.", is_system=True)
     conn.commit()
 
 # A função principal da página do chat
@@ -124,7 +120,7 @@ def chat_dev():
                 manage_user(st.session_state.username, "add")
                 add_message("Sistema", f"{st.session_state.username} entrou no chat.", is_system=True)
                 st.session_state.chat_active = True
-                st.rerun() # Reinicia para mostrar a interface do chat
+                st.rerun()
             else:
                 st.warning("Por favor, digite um nome de usuário válido.")
     else:
@@ -138,14 +134,11 @@ def chat_dev():
         users = get_users()
         st.markdown(f"**Online:** {', '.join(u if u != st.session_state.username else f'**{u}**' for u in users)}")
 
-        # Contêiner para as mensagens do chat
-        chat_placeholder = st.empty() # Usar st.empty() para atualizar o conteúdo
-        
-        # Exibe as mensagens
-        messages = get_messages()
-        with chat_placeholder.container():
+        # Contêiner para as mensagens do chat com altura fixa e rolagem
+        chat_container = st.container(height=400, key="chat_container")
+        with chat_container:
+            messages = get_messages()
             for user, msg, timestamp, is_system in messages:
-                # Estilos CSS para mensagens de sistema, do próprio usuário e de outros usuários
                 if is_system:
                     st.markdown(f"<div style='font-style: italic; color: #888; text-align: center; margin: 8px 0;'>{msg}</div>", unsafe_allow_html=True)
                 elif user == st.session_state.username:
@@ -153,28 +146,39 @@ def chat_dev():
                 else:
                     st.markdown(f"<div style='display: flex; justify-content: flex-start; margin-bottom: 5px;'><div style='max-width: 70%; background: #f1f1f1; color: #333; border-radius: 15px 15px 15px 0; padding: 10px 15px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1);'><small style='font-weight: bold;'>{user}</small><br>{emojify(msg)} <span style='font-size:0.75em;color:#888; display: block; text-align: right;'>{timestamp}</span></div></div>", unsafe_allow_html=True)
 
-        # Usando st.form para o input da mensagem para lidar com a limpeza de forma mais limpa
+        # JavaScript para rolar para o final do contêiner
+        st.markdown("""
+            <script>
+                const chatContainer = document.querySelector('.element-container[key="chat_container"]');
+                if (chatContainer) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            </script>
+        """, unsafe_allow_html=True)
+
+        # Formulário para envio de mensagens
         with st.form(key='chat_form', clear_on_submit=True):
-            message_input = st.text_input("Digite sua mensagem:", key="chat_message_input") # Nova chave para o input dentro do form
+            message_input = st.text_input("Digite sua mensagem:", key="chat_message_input")
             submit_button = st.form_submit_button("Enviar")
 
             if submit_button:
                 if message_input.strip():
                     add_message(st.session_state.username, message_input.strip())
                     manage_user(st.session_state.username, "update")
-                    # O clear_on_submit=True no st.form cuidará da limpeza do input
-                    st.rerun() # Força o rerun para atualizar o chat
+                    st.rerun()
                 else:
                     st.warning("A mensagem não pode estar vazia.")
 
-        # Auto-refresh para simular atualizações em tempo real
-        # Este loop fará o Streamlit recarregar a cada 2 segundos
+        # Auto-refresh otimizado
         if st.session_state.chat_active:
-            current_message_count = len(get_messages()) # Pega a contagem atual de mensagens
+            current_message_count = len(get_messages())
             if current_message_count > st.session_state.last_message_count:
                 st.session_state.last_message_count = current_message_count
-                st.rerun() # Força o rerun se houver novas mensagens
+                st.rerun()
             else:
-                time.sleep(2)  # Poll a cada 2 segundos
-                st.rerun() # Força o rerun para verificar novas mensagens
-
+                # Verifica a cada 5 segundos, mas só recarrega se houver mudanças
+                time.sleep(5)
+                new_message_count = len(get_messages())
+                if new_message_count > st.session_state.last_message_count:
+                    st.session_state.last_message_count = new_message_count
+                    st.rerun()

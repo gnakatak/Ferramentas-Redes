@@ -1,13 +1,16 @@
 import streamlit as st
-# st.set_page_config(page_title="Monitor de Internet", layout="centered")
-
 import pandas as pd
 import speedtest
 from datetime import datetime
 import time
+import logging
+
+# Configurar logging para depuração
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def speedtest_teste():
-    # ---------- Inicialização de sessão ----------
+    # Inicialização de sessão
     if "dados" not in st.session_state:
         st.session_state.dados = {
             "DataHora": [],
@@ -19,14 +22,20 @@ def speedtest_teste():
     if "monitorando" not in st.session_state:
         st.session_state.monitorando = False
 
-    # ---------- Função de teste ----------
+    # Função de teste com tratamento de erros
     def testar_velocidade():
         try:
             with st.spinner("Realizando teste de velocidade..."):
-                stt = speedtest.Speedtest()
-                stt.get_best_server()
+                stt = speedtest.Speedtest(timeout=30)  # Timeout explícito
+                logger.info("Selecionando melhor servidor...")
+                stt.get_best_server()  # Tenta selecionar o melhor servidor
+                logger.info(f"Servidor selecionado: {stt.results.server['host']}")
+                
+                logger.info("Testando download...")
                 download = stt.download() / 1_000_000
+                logger.info("Testando upload...")
                 upload = stt.upload() / 1_000_000
+                logger.info("Testando ping...")
                 ping = stt.results.ping
                 agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -37,16 +46,18 @@ def speedtest_teste():
                     "Ping": [ping]
                 })
 
-                # Adiciona apenas na sessão (dados temporários)
                 for col in novo_dado.columns:
                     st.session_state.dados[col].append(novo_dado[col].values[0])
 
-        except Exception as e:
-            st.error(f"Erro ao testar velocidade: {e}")
-            return False
-        return True
+                logger.info(f"Teste concluído: Download={download:.1f} Mbps, Upload={upload:.1f} Mbps, Ping={ping:.0f} ms")
+                return True
 
-    # ---------- Título e teste manual ----------
+        except Exception as e:
+            logger.error(f"Erro no teste de velocidade: {str(e)}")
+            st.error(f"Erro ao testar velocidade: {str(e)}")
+            return False
+
+    # Título e teste manual
     st.title("📡 Monitor de Velocidade da Internet")
 
     col_teste, col_limpar = st.columns([3, 1])
@@ -68,10 +79,9 @@ def speedtest_teste():
             st.success("Dados limpos!")
             st.rerun()
 
-    # ---------- Monitoramento contínuo ----------
+    # Monitoramento contínuo
     st.subheader("🔁 Monitoramento Contínuo")
 
-    # Adiciona campos para controle de tempo
     if "ultimo_teste" not in st.session_state:
         st.session_state.ultimo_teste = None
 
@@ -100,7 +110,6 @@ def speedtest_teste():
 
     with col2:
         if st.session_state.monitorando:
-            # Verifica se é hora de fazer um novo teste
             agora = datetime.now()
             if st.session_state.proximo_teste and agora >= st.session_state.proximo_teste:
                 if testar_velocidade():
@@ -109,39 +118,33 @@ def speedtest_teste():
                     st.success(f"Teste automático realizado às {agora.strftime('%H:%M:%S')}")
                     st.rerun()
             
-            # Mostra informações do monitoramento
             if st.session_state.proximo_teste:
                 tempo_restante = (st.session_state.proximo_teste - agora).total_seconds()
                 if tempo_restante > 0:
                     st.info(f"⏰ Próximo teste em: {int(tempo_restante)}s")
-                    # Adiciona um botão para refresh manual
                     if st.button("🔄 Atualizar Status"):
                         st.rerun()
                 else:
                     st.info("⏰ Executando teste...")
             
-            # Adiciona informações de status sem loop infinito
             st.info("💡 Dica: A página atualizará automaticamente quando for hora do próximo teste.")
             st.caption(f"Status: Monitoramento ativo - Última verificação: {agora.strftime('%H:%M:%S')}")
             
-            # Apenas recarrega quando necessário (nos últimos 10 segundos antes do teste)
             if st.session_state.proximo_teste:
                 tempo_para_teste = (st.session_state.proximo_teste - agora).total_seconds()
-                if 0 < tempo_para_teste <= 10:  # Só atualiza nos últimos 10 segundos
+                if 0 < tempo_para_teste <= 10:
                     time.sleep(2)
                     st.rerun()
 
-    # ---------- Visualização de resultados ----------
+    # Visualização de resultados
     st.subheader("📊 Resultados")
 
-    # Usa apenas dados da sessão atual
     df = pd.DataFrame(st.session_state.dados)
 
     if not df.empty:
         df["DataHora"] = pd.to_datetime(df["DataHora"], errors="coerce")
         df = df.dropna(subset=["DataHora"])
 
-        # Mostra estatísticas resumidas
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -173,7 +176,6 @@ def speedtest_teste():
         st.write("📉 Gráfico de Ping")
         st.line_chart(df.set_index("DataHora")[["Ping"]])
 
-        # Opção de baixar dados da sessão atual como CSV (temporário)
         csv_data = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             "📥 Baixar Dados da Sessão (CSV)", 
