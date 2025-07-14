@@ -23,40 +23,6 @@ def get_ipinfo_details(ip=None):
         return {"success": False}
 
 def ip_viewer():
-    # No início da função ip_viewer()
-    st.markdown("""
-    <script>
-    (async function() {
-        const res = await fetch('https://api64.ipify.org?format=json');
-        const data = await res.json();
-        const ip = data.ip;
-        const input = window.parent.document.querySelector("input#client_ip_hidden");
-        if (input) {
-            input.value = ip;
-            input.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-    })();
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Campo oculto para receber IP
-    st.markdown("""
-    <style>
-    input#client_ip_hidden { display: none; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    client_ip = st.text_input("", key="client_ip_hidden")
-
-    # Decide qual IP usar para consulta
-    if client_ip:
-        ip_para_consultar = client_ip
-    else:
-        ip_para_consultar = None  # fallback para IP do servidor
-
-    # Consulta ipinfo.io
-    user_info = get_ipinfo_details(ip_para_consultar)
-
     st.title("🌍 Visualizador de IP e Localização com ipinfo.io")
 
     # Dados do servidor (aplicação hospedada)
