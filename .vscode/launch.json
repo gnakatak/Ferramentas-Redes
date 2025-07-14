@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: run_all.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_all.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Backend Server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/server.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Python: Test Sniffer",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_sniffer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--no-capture"]
+        },
+        {
+            "name": "Python: Test Sniffer (Full)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_sniffer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

@@ -1,330 +1,419 @@
 import streamlit as st
-import requests
-import time
 import pandas as pd
-import json
+import sys
+import os
+import time
 from datetime import datetime
 
-BACKEND_URL = "http://localhost:5000"
+# Adiciona o caminho do backend para importar o sniffer
+backend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend')
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
 
-# Configuração da página
-st.set_page_config(
-    page_title="Ferramentas de Redes",
-    page_icon="🌐",
-    layout="wide"
-)
+# Importa o sniffer diretamente
+try:
+    from ferramentas.sniffer.sniffer import PacketSniffer, get_network_interfaces
+    SNIFFER_AVAILABLE = True
+except ImportError as e:
+    st.error(f"Erro ao importar sniffer: {e}")
+    SNIFFER_AVAILABLE = False
 
-# Sidebar para navegação
-st.sidebar.title("🌐 Ferramentas de Redes")
-page = st.sidebar.selectbox(
-    "Escolha uma ferramenta:",
-    ["Home", "Sniffer de Pacotes", "Firewall", "Métricas", "Mini Chat"]
-)
+# O st.set_page_config() deve ser a PRIMEIRA chamada do Streamlit no seu script principal.
+st.set_page_config(page_title="Ferramentas de Rede", layout="centered")
 
-if page == "Home":
-    st.title("🌐 Ferramentas de Redes")
-    st.markdown("""
-    ## Bem-vindo ao conjunto de ferramentas de redes!
-    
-    ### 🔍 Sniffer de Pacotes
-    Capture e analise tráfego de rede em tempo real
-    
-    ### 🛡️ Firewall
-    Configure regras de firewall
-    
-    ### 📊 Métricas
-    Monitore métricas de rede (ping, throughput)
-    
-    ### 💬 Mini Chat
-    Sistema de chat simples
-    """)
-    
-    # Teste de conectividade
-    st.subheader("🔗 Teste de Conectividade com Backend")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("Testar Conexão"):
-            try:
-                response = requests.get(f"{BACKEND_URL}/api/hello")
-                data = response.json()
-                st.success(f"✅ Backend conectado: {data}") 
-            except Exception as e:
-                st.error(f"❌ Erro ao conectar com backend: {e}")
-    
-    with col2:
-        if st.button("Testar Despedida"):
-            try: 
-                response = requests.get(f"{BACKEND_URL}/api/goodbye")
-                data = response.json()
-                st.success(f"✅ {data['message']}")
-            except Exception as e:
-                st.error(f"❌ Erro ao conectar com backend: {e}")
+# Estado global para resultados de captura
+if 'capture_results' not in st.session_state:
+    st.session_state.capture_results = {
+        "is_capturing": False,
+        "packets": [],
+        "stats": {},
+        "last_capture_time": None
+    }
 
-elif page == "Sniffer de Pacotes":
+# --- Funções para simular as páginas ---
+def homepage():
+    st.title("🏠 Página Inicial")
+    st.write("Bem-vindo ao sistema de Ferramentas de Rede!")
+    st.info("📱 Aplicação totalmente integrada - sem backend externo necessário!")
+
+def sniffer_page():
     st.title("🔍 Sniffer de Pacotes")
+    st.markdown("Capture e analise o tráfego de rede em tempo real")
     
-    # Status do sniffer
-    st.subheader("📊 Status da Captura")
+    # Verificação de disponibilidade
+    if not SNIFFER_AVAILABLE:
+        st.error("❌ Sniffer não disponível! Verifique se PyShark está instalado.")
+        st.code("pip install pyshark")
+        return
     
-    # Container para atualização automática
-    status_container = st.container()
-    
-    # Controles do sniffer
-    st.subheader("⚙️ Controles")
-    
-    col1, col2, col3 = st.columns(3)
+    # Layout em colunas para melhor organização
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Botão para listar interfaces
-        if st.button("🔍 Listar Interfaces"):
-            try:
-                response = requests.get(f"{BACKEND_URL}/api/sniffer/interfaces")
-                data = response.json()
-                if data["success"]:
-                    st.session_state.interfaces = data["interfaces"]
-                    st.success("Interfaces carregadas!")
+        st.subheader("🌐 Configuração de Interface")
+        
+        # Botão para detectar interfaces
+        if st.button("🔍 Detectar Interfaces", type="primary"):
+            with st.spinner("Detectando interfaces de rede..."):
+                try:
+                    # Cria instância do sniffer para detectar interfaces
+                    temp_sniffer = PacketSniffer()
+                    interfaces = temp_sniffer.get_network_interfaces()
+                    st.session_state.interfaces = interfaces
+                    st.success(f"✅ {len(interfaces)} interfaces detectadas!")
+                    
+                    # Mostra as interfaces encontradas
+                    if interfaces:
+                        st.info("🌐 Interfaces disponíveis:")
+                        for i, iface in enumerate(interfaces):
+                            if isinstance(iface, dict):
+                                name = iface.get('name', 'N/A')
+                                iface_type = iface.get('type', 'N/A')
+                                status = iface.get('status', 'N/A')
+                                st.text(f"  {i+1}. {iface_type} {name} ({status})")
+                            else:
+                                st.text(f"  {i+1}. {str(iface)}")
+                                
+                except Exception as e:
+                    st.error(f"❌ Erro ao detectar interfaces: {str(e)}")
+                    st.session_state.interfaces = []
+        
+        # Seleção de interface
+        if 'interfaces' in st.session_state and st.session_state.interfaces:
+            interface_options = []
+            for i, iface in enumerate(st.session_state.interfaces):
+                if isinstance(iface, dict):
+                    name = iface.get('name', f'Interface {i+1}')
+                    iface_type = iface.get('type', 'N/A')
+                    status = iface.get('status', 'N/A')
+                    interface_options.append(f"{iface_type} {name} ({status})")
                 else:
-                    st.error(f"Erro: {data.get('error', 'Erro desconhecido')}")
-            except Exception as e:
-                st.error(f"Erro ao conectar: {e}")
+                    interface_options.append(f"{str(iface)}")
+            
+            selected_interface = st.selectbox("Escolha a interface:", interface_options)
+            
+            # Configurações de captura
+            st.subheader("⚙️ Configurações de Captura")
+            
+            col_config1, col_config2 = st.columns(2)
+            with col_config1:
+                packet_count = st.number_input("Número de pacotes:", min_value=1, max_value=1000, value=50)
+                timeout = st.number_input("Timeout (segundos):", min_value=1, max_value=300, value=30)
+            
+            with col_config2:
+                use_filter = st.checkbox("Usar filtro BPF")
+                bpf_filter = ""
+                if use_filter:
+                    bpf_filter = st.text_input("Filtro BPF:", placeholder="tcp port 80")
+            
+            # Controles de captura
+            st.subheader("🎮 Controles")
+            
+            col_start, col_stop = st.columns(2)
+            
+            with col_start:
+                if st.button("🟢 Iniciar Captura", type="primary"):
+                    try:
+                        # Verifica se há interface selecionada
+                        if not selected_interface:
+                            st.error("❌ Selecione uma interface primeiro!")
+                            return
+                        
+                        # Extrai nome da interface a partir do texto selecionado
+                        interface_name = None
+                        for iface in st.session_state.interfaces:
+                            if isinstance(iface, dict):
+                                name = iface.get('name', '')
+                                iface_type = iface.get('type', '')
+                                status = iface.get('status', '')
+                                display_text = f"{iface_type} {name} ({status})"
+                                
+                                if display_text == selected_interface:
+                                    interface_name = iface.get('id', name)
+                                    break
+                        
+                        if not interface_name:
+                            st.error("❌ Não foi possível identificar a interface selecionada!")
+                            return
+                        
+                        # Configura captura
+                        st.session_state.capture_results["is_capturing"] = True
+                        
+                        with st.spinner("Capturando pacotes..."):
+                            try:
+                                # Cria sniffer
+                                sniffer = PacketSniffer()
+                                
+                                # Executa captura diretamente (sem thread)
+                                result = sniffer.start_capture(
+                                    interface=interface_name,
+                                    packet_count=packet_count,
+                                    timeout=timeout,
+                                    bpf_filter=bpf_filter if use_filter else None
+                                )
+                                
+                                # Atualiza resultados
+                                st.session_state.capture_results.update({
+                                    "is_capturing": False,
+                                    "packets": result.get('packets', []),
+                                    "stats": result.get('stats', {}),
+                                    "last_capture_time": datetime.now()
+                                })
+                                
+                                packets_count = len(result.get('packets', []))
+                                if result.get('demo_mode'):
+                                    st.info(f"ℹ️ Modo demonstração - {packets_count} pacotes simulados")
+                                elif result.get('timeout'):
+                                    st.warning(f"⚠️ Timeout na captura - {packets_count} pacotes capturados")
+                                else:
+                                    st.success(f"✅ Captura concluída! {packets_count} pacotes capturados")
+                                    
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.session_state.capture_results.update({
+                                    "is_capturing": False,
+                                    "error": str(e)
+                                })
+                                st.error(f"❌ Erro na captura: {str(e)}")
+                            
+                    except Exception as e:
+                        st.error(f"❌ Erro ao configurar captura: {str(e)}")
+                        st.session_state.capture_results["is_capturing"] = False
+            
+            with col_stop:
+                if st.button("🔴 Parar Captura"):
+                    st.session_state.capture_results["is_capturing"] = False
+                    st.success("🔴 Captura interrompida!")
     
-    # Configurações de captura
-    st.subheader("🛠️ Configurações de Captura")
-    
-    # Interface selecionada
-    interfaces_available = getattr(st.session_state, 'interfaces', [])
-    if interfaces_available:
-        interface_names = [iface['name'] for iface in interfaces_available]
-        selected_interface = st.selectbox("Interface:", ["Auto"] + interface_names)
-    else:
-        selected_interface = st.selectbox("Interface:", ["Auto"])
-    
-    # Filtros
-    filter_preset = st.selectbox(
-        "Filtro Pré-definido:",
-        ["Nenhum", "HTTP (port 80)", "HTTPS (port 443)", "DNS (port 53)", "TCP", "UDP", "ICMP"]
-    )
-    
-    custom_filter = st.text_input("Filtro Personalizado (BPF):", placeholder="Ex: tcp port 80")
-    
-    # Determina o filtro final
-    filter_expr = None
-    if filter_preset != "Nenhum":
-        filter_map = {
-            "HTTP (port 80)": "tcp port 80",
-            "HTTPS (port 443)": "tcp port 443", 
-            "DNS (port 53)": "udp port 53",
-            "TCP": "tcp",
-            "UDP": "udp",
-            "ICMP": "icmp"
-        }
-        filter_expr = filter_map.get(filter_preset)
-    
-    if custom_filter:
-        filter_expr = custom_filter
-    
-    # Configurações avançadas
-    col1, col2 = st.columns(2)
-    with col1:
-        packet_count = st.number_input("Máximo de pacotes (0 = ilimitado):", min_value=0, value=100)
     with col2:
-        timeout = st.number_input("Timeout (segundos, 0 = sem timeout):", min_value=0, value=30)
+        st.subheader("📊 Status da Captura")
+        
+        # Status em tempo real
+        if st.session_state.capture_results["is_capturing"]:
+            st.warning("� Captura sendo configurada...")
+        else:
+            st.success("� Pronto para capturar")
+        
+        # Métricas da última captura
+        if st.session_state.capture_results.get("last_capture_time"):
+            st.metric("Última captura", 
+                     st.session_state.capture_results["last_capture_time"].strftime("%H:%M:%S"))
+        
+        if st.session_state.capture_results.get("packets"):
+            st.metric("Pacotes capturados", len(st.session_state.capture_results["packets"]))
     
-    # Botões de controle
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("▶️ Iniciar Captura"):
+    # Resultados da captura
+    if st.session_state.capture_results.get("packets"):
+        st.subheader("📋 Resultados da Captura")
+        
+        packets = st.session_state.capture_results["packets"]
+        
+        if packets:
+            # Estatísticas gerais
+            st.success(f"✅ {len(packets)} pacotes capturados")
+            
+            # Tabela de pacotes
             try:
-                payload = {
-                    "interface": selected_interface if selected_interface != "Auto" else None,
-                    "filter": filter_expr,
-                    "packet_count": packet_count if packet_count > 0 else 0,
-                    "timeout": timeout if timeout > 0 else None
-                }
+                packet_data = []
+                for i, packet in enumerate(packets[:100]):  # Limitar a 100 para performance
+                    packet_info = {
+                        'ID': i + 1,
+                        'Timestamp': packet.get('timestamp', 'N/A'),
+                        'Protocolo': packet.get('protocol', 'N/A'),
+                        'Origem': packet.get('src', 'N/A'),
+                        'Destino': packet.get('dst', 'N/A'),
+                        'Tamanho': packet.get('length', 'N/A')
+                    }
+                    packet_data.append(packet_info)
                 
-                response = requests.post(
-                    f"{BACKEND_URL}/api/sniffer/start",
-                    json=payload
-                )
-                data = response.json()
+                if packet_data:
+                    df = pd.DataFrame(packet_data)
+                    st.dataframe(df, use_container_width=True)
+                    
+                    # Estatísticas por protocolo
+                    protocols = [p.get('protocol', 'Desconhecido') for p in packets]
+                    protocol_counts = pd.Series(protocols).value_counts()
+                    
+                    st.subheader("📈 Estatísticas por Protocolo")
+                    col_chart1, col_chart2 = st.columns(2)
+                    
+                    with col_chart1:
+                        st.bar_chart(protocol_counts)
+                    
+                    with col_chart2:
+                        for protocol, count in protocol_counts.head(5).items():
+                            st.metric(str(protocol), count)
                 
-                if data["success"]:
-                    st.success("✅ Captura iniciada!")
-                    st.session_state.sniffer_running = True
-                else:
-                    st.error(f"❌ Erro: {data.get('error', 'Erro desconhecido')}")
             except Exception as e:
-                st.error(f"❌ Erro ao iniciar captura: {e}")
-    
-    with col2:
-        if st.button("⏹️ Parar Captura"):
-            try:
-                response = requests.post(f"{BACKEND_URL}/api/sniffer/stop")
-                data = response.json()
-                
-                if data["success"]:
-                    st.success("✅ Captura finalizada!")
-                    st.session_state.sniffer_running = False
-                else:
-                    st.error(f"❌ Erro: {data.get('error', 'Erro desconhecido')}")
-            except Exception as e:
-                st.error(f"❌ Erro ao parar captura: {e}")
-    
-    with col3:
-        if st.button("🔄 Atualizar Status"):
+                st.error(f"❌ Erro ao processar dados: {str(e)}")
+        
+        # Botão para limpar resultados
+        if st.button("🗑️ Limpar Resultados"):
+            st.session_state.capture_results = {
+                "is_capturing": False,
+                "packets": [],
+                "stats": {},
+                "last_capture_time": None
+            }
+            st.success("✅ Resultados limpos!")
             st.rerun()
     
-    # Exibe status atual
-    try:
-        response = requests.get(f"{BACKEND_URL}/api/sniffer/status")
-        data = response.json()
-        
-        if data["success"]:
-            stats = data["statistics"]
-            
-            with status_container:
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Status", "🟢 Ativo" if stats.get('is_running') else "🔴 Parado")
-                
-                with col2:
-                    st.metric("Total de Pacotes", stats.get('total_packets', 0))
-                
-                with col3:
-                    st.metric("Duração (s)", f"{stats.get('duration', 0):.1f}")
-                
-                with col4:
-                    st.metric("Pacotes/s", f"{stats.get('packets_per_second', 0):.1f}")
-                
-                # Gráfico de protocolos
-                protocols = stats.get('protocols', {})
-                if protocols:
-                    st.subheader("📊 Distribuição de Protocolos")
-                    df_protocols = pd.DataFrame(
-                        list(protocols.items()),
-                        columns=['Protocolo', 'Quantidade']
-                    )
-                    st.bar_chart(df_protocols.set_index('Protocolo'))
+    # Erro se houver
+    if 'error' in st.session_state.capture_results:
+        st.error(f"❌ Erro na captura: {st.session_state.capture_results['error']}")
+
+def dashboard_page():
+    """
+    Página do dashboard com overview das ferramentas
+    """
+    st.title("📊 Dashboard - Ferramentas de Rede")
+    st.markdown("**Visão geral do sistema e ferramentas disponíveis**")
     
-    except Exception as e:
-        with status_container:
-            st.error(f"❌ Erro ao obter status: {e}")
+    # Métricas principais
+    st.subheader("📈 Status do Sistema")
     
-    # Exibir pacotes capturados
-    st.subheader("📦 Pacotes Capturados")
-    
-    limit = st.slider("Número de pacotes a exibir:", 1, 100, 20)
-    
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("📥 Carregar Pacotes"):
-            try:
-                response = requests.get(f"{BACKEND_URL}/api/sniffer/packets?limit={limit}")
-                data = response.json()
-                
-                if data["success"]:
-                    packets = data["packets"]
-                    st.session_state.packets = packets
-                    st.success(f"✅ {len(packets)} pacotes carregados!")
-                else:
-                    st.error(f"❌ Erro: {data.get('error', 'Erro desconhecido')}")
-            except Exception as e:
-                st.error(f"❌ Erro ao carregar pacotes: {e}")
+        st.metric("Sistema", "🟢 Online", delta="Funcionando")
     
     with col2:
-        if st.button("💾 Exportar Pacotes"):
-            try:
-                response = requests.post(
-                    f"{BACKEND_URL}/api/sniffer/export",
-                    json={"format": "json"}
-                )
-                data = response.json()
-                
-                if data["success"]:
-                    st.success(f"✅ {data['message']}")
-                else:
-                    st.error(f"❌ Erro: {data.get('error', 'Erro desconhecido')}")
-            except Exception as e:
-                st.error(f"❌ Erro ao exportar: {e}")
+        st.metric("Sniffer", "✅ Disponível" if SNIFFER_AVAILABLE else "❌ Indisponível")
     
-    # Exibe tabela de pacotes
-    packets = getattr(st.session_state, 'packets', [])
-    if packets:
-        # Converte para DataFrame
-        df_packets = pd.DataFrame(packets)
-        
-        # Formata timestamp
-        if 'timestamp' in df_packets.columns:
-            df_packets['timestamp'] = pd.to_datetime(df_packets['timestamp']).dt.strftime('%H:%M:%S.%f').str[:-3]
-        
-        # Seleciona colunas para exibir
-        display_columns = ['timestamp', 'protocol', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'length']
-        available_columns = [col for col in display_columns if col in df_packets.columns]
-        
-        st.dataframe(
-            df_packets[available_columns],
-            use_container_width=True,
-            height=400
-        )
-        
-        # Análises especiais
-        st.subheader("🔍 Análises Especiais")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("🌐 Analisar HTTP"):
-                try:
-                    response = requests.get(f"{BACKEND_URL}/api/sniffer/analyze/http")
-                    data = response.json()
-                    if data["success"]:
-                        st.write(f"📊 Pacotes HTTP: {data['count']}")
-                        if data['http_packets']:
-                            st.dataframe(pd.DataFrame(data['http_packets']))
-                except Exception as e:
-                    st.error(f"Erro: {e}")
-        
-        with col2:
-            if st.button("🔍 Analisar DNS"):
-                try:
-                    response = requests.get(f"{BACKEND_URL}/api/sniffer/analyze/dns")
-                    data = response.json()
-                    if data["success"]:
-                        st.write(f"📊 Pacotes DNS: {data['count']}")
-                        if data['dns_packets']:
-                            st.dataframe(pd.DataFrame(data['dns_packets']))
-                except Exception as e:
-                    st.error(f"Erro: {e}")
-        
-        with col3:
-            if st.button("📈 Top Talkers"):
-                try:
-                    response = requests.get(f"{BACKEND_URL}/api/sniffer/analyze/top-talkers?limit=5")
-                    data = response.json()
-                    if data["success"]:
-                        st.write("📊 Top 5 IPs por tráfego:")
-                        df_top = pd.DataFrame(data['top_talkers'])
-                        if not df_top.empty:
-                            st.dataframe(df_top)
-                except Exception as e:
-                    st.error(f"Erro: {e}")
+    with col3:
+        total_interfaces = len(getattr(st.session_state, 'interfaces', []))
+        st.metric("Interfaces", total_interfaces)
     
+    with col4:
+        total_packets = len(st.session_state.capture_results.get("packets", []))
+        st.metric("Pacotes Capturados", total_packets)
+    
+    # Seção de ferramentas disponíveis
+    st.subheader("🛠️ Ferramentas Disponíveis")
+    
+    tool_col1, tool_col2 = st.columns(2)
+    
+    with tool_col1:
+        st.info("🔍 **Sniffer de Pacotes**")
+        st.write("Capture e analise tráfego de rede em tempo real")
+    
+    with tool_col2:
+        st.info("📈 **Speed Test**")
+        st.write("Teste a velocidade da sua conexão")
+    
+    # Histórico recente
+    if st.session_state.capture_results.get("last_capture_time"):
+        st.subheader("📋 Última Atividade")
+        
+        last_time = st.session_state.capture_results["last_capture_time"]
+        packets = st.session_state.capture_results.get("packets", [])
+        
+        st.success(f"✅ Última captura: {last_time.strftime('%H:%M:%S')} - {len(packets)} pacotes")
+        
+        # Resumo rápido dos protocolos
+        if packets:
+            protocols = [p.get('protocol', 'Desconhecido') for p in packets]
+            protocol_counts = pd.Series(protocols).value_counts().head(3)
+            
+            st.write("**Top 3 Protocolos:**")
+            for protocol, count in protocol_counts.items():
+                st.text(f"• {protocol}: {count} pacotes")
+    
+    # Ajuda rápida
+    st.subheader("💡 Ajuda Rápida")
+    
+    with st.expander("Como usar o Sniffer"):
+        st.markdown("""
+        1. **Vá para a página Sniffer** 🔍
+        2. **Detecte interfaces** disponíveis
+        3. **Configure** filtros se necessário
+        4. **Inicie a captura** e monitore em tempo real
+        5. **Analise os resultados** na tabela e gráficos
+        """)
+    
+    with st.expander("Filtros BPF Úteis"):
+        st.code("""
+        tcp port 80          # Tráfego HTTP
+        tcp port 443         # Tráfego HTTPS
+        udp port 53          # DNS
+        icmp                 # Ping
+        tcp and port 22      # SSH
+        """)
+    
+    # Status das interfaces
+    if hasattr(st.session_state, 'interfaces') and st.session_state.interfaces:
+        st.subheader("🌐 Interfaces Disponíveis")
+        
+        for i, iface in enumerate(st.session_state.interfaces[:5]):  # Mostrar só as 5 primeiras
+            if isinstance(iface, dict):
+                name = iface.get('name', f'Interface {i+1}')
+                status = "🟢 Ativa" if iface.get('status') else "⚪ Detectada"
+                st.text(f"• {name} - {status}")
+            else:
+                st.text(f"• {str(iface)}")
+        
+        if len(st.session_state.interfaces) > 5:
+            st.text(f"... e mais {len(st.session_state.interfaces) - 5} interfaces")
     else:
-        st.info("📝 Nenhum pacote carregado. Clique em 'Carregar Pacotes' para visualizar.")
+        st.info("💡 Vá para a página Sniffer para detectar interfaces de rede")
 
-elif page == "Firewall":
-    st.title("🛡️ Firewall")
-    st.info("🚧 Em desenvolvimento")
+def speedtest_page():
+    st.title("📊 Speed Test")
+    st.write("Teste de velocidade da sua conexão.")
+    st.info("🚧 Speed Test em desenvolvimento")
+    
+    # Placeholder para speedtest
+    if st.button("🚀 Executar Speed Test"):
+        st.info("Funcionalidade em desenvolvimento. Em breve disponível!")
 
-elif page == "Métricas":
-    st.title("📊 Métricas de Rede")
-    st.info("🚧 Em desenvolvimento")
+def about_page():
+    st.title("ℹ️ Sobre o Projeto")
+    st.write("**Ferramentas de Redes** - Um conjunto completo de utilitários para análise e monitoramento de rede.")
+    
+    st.markdown("""
+    ### 🚀 Funcionalidades:
+    - **🔍 Sniffer de Pacotes**: Captura e análise de tráfego de rede em tempo real
+    - **📊 Dashboard**: Visualização centralizada de métricas e status
+    - **📈 Speed Test**: Teste de velocidade da conexão
+    
+    ### 🛠️ Tecnologias:
+    - **Frontend**: Streamlit
+    - **Captura de Pacotes**: PyShark
+    - **Visualização**: Pandas, Streamlit Charts
+    
+    ### 📝 Como usar:
+    1. Acesse o Dashboard para ver o status geral
+    2. Use o Sniffer para capturar e analisar pacotes
+    3. Teste a velocidade da sua conexão no Speed Test
+    """)
 
-elif page == "Mini Chat":
-    st.title("💬 Mini Chat")
-    st.info("🚧 Em desenvolvimento")
+# --- Lógica de Navegação na Barra Lateral ---
+st.sidebar.title("🌐 Navegação")
+st.sidebar.markdown("---")
+page = st.sidebar.radio("Escolha uma página:", ["🏠 Início", "📊 Dashboard", "🔍 Sniffer", "📈 SpeedTest", "ℹ️ Sobre"])
+
+# Navegação principal
+if page == "🏠 Início":
+    homepage()
+elif page == "📊 Dashboard":
+    dashboard_page()
+elif page == "🔍 Sniffer":
+    sniffer_page()
+elif page == "📈 SpeedTest":
+    speedtest_page()
+elif page == "ℹ️ Sobre":
+    about_page()
+
+# Rodapé informativo na sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🔗 Status do Sistema")
+
+# Status da aplicação integrada
+st.sidebar.success("✅ Aplicação Integrada")
+st.sidebar.info("💡 Sniffer totalmente integrado - sem backend externo necessário")
+
+# Informações do projeto
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Ferramentas de Redes v2.0**")
+st.sidebar.markdown("*Versão totalmente integrada*")

@@ -3,6 +3,41 @@
 
 Este projeto tem como objetivo criar uma aplicação com diversas ferramentas voltadas para o ensino e demonstração prática de conceitos de redes de computadores. Abaixo, está detalhada toda a estrutura do projeto com explicações para que qualquer pessoa possa entender facilmente onde e como contribuir.
 
+## 🚀 Como Executar a Aplicação
+
+### ⭐ NOVO - Versão Integrada (Recomendado)
+```bash
+python run_streamlit.py
+```
+**Nova arquitetura totalmente integrada:**
+- ✅ Apenas Streamlit (sem backend Flask)
+- ✅ Sniffer integrado diretamente 
+- ✅ Mais simples e rápido
+- ✅ Menos dependências
+
+### Métodos Antigos (com backend Flask)
+```bash
+# Método completo com backend + frontend
+python run_app.py
+
+# Versão melhorada
+python run_all_improved.py
+```
+
+### Via VS Code Tasks
+- Pressione `Ctrl+Shift+P`
+- Digite "Tasks: Run Task"  
+- Selecione "Run Main App (app.py)" ou "Run Frontend (Streamlit)"
+
+## 📱 Acessando a Aplicação
+- **Nova Versão Integrada**: http://localhost:8501 (apenas Streamlit)
+- **Versão Antiga**: http://localhost:8501 + http://localhost:5000 (Flask + Streamlit)
+
+## 🗂  Estrutura Geralrkdown
+# Estrutura do Projeto: Ferramentas-Redes
+
+Este projeto tem como objetivo criar uma aplicação com diversas ferramentas voltadas para o ensino e demonstração prática de conceitos de redes de computadores. Abaixo, está detalhada toda a estrutura do projeto com explicações para que qualquer pessoa possa entender facilmente onde e como contribuir.
+
 ## 🗂  Estrutura Geral
 
 ```bash

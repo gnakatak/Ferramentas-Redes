@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Integrated Streamlit App",
+			"type": "shell",
+			"command": "python run_streamlit.py",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install Requirements",
+			"type": "shell", 
+			"command": "pip install -r requirements_integrated.txt",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
