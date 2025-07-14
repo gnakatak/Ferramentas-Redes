@@ -74,7 +74,7 @@ def ip_viewer():
         if primary_ip == "Unknown":
             st.error("Não foi possível obter o endereço IP.")
         else:
-            st.info("Nota: Usamos serviços de geolocalização (ip-api.com e ipify.org) para estimar sua cidade e país com base no IP. Nenhum dado pessoal é armazenado.")
+            st.info("Nota: Usamos serviços de geolocalização (ip-api.com e ipify.org) para estimar sua cidade e país com base no IP. Nenhum dado pessoal é armazenado. df")
 
     except Exception as e:
         st.error(f"Erro ao obter informações de IP: {str(e)}")
