@@ -1,6 +1,9 @@
 streamlit
 pandas
-streamlit
 speedtest-cli
 streamlit-extras
 streamlit-autorefresh
+python-whois
+requests
+certifi
+urllib3

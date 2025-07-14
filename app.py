@@ -1,5 +1,5 @@
 import streamlit as st
-from ferramentas import dashboard, speedtest_module, traceroute_dev, chat, visualizador_ip, postman
+from ferramentas import dashboard, speedtest_module, traceroute_dev, chat, visualizador_ip, postman , whois_module
 
 st.set_page_config(page_title="Ferramentas de Rede", layout="centered")
 
@@ -42,6 +42,13 @@ def postman_page():
     reset_speedtest_state()
     postman.postman_interface()
 
+
+def whois_page():
+    reset_speedtest_state()
+    whois_module.whois_lookup()
+
+
+
 def about_page():
     reset_speedtest_state()
     st.title("Sobre Nós")
@@ -49,7 +56,7 @@ def about_page():
 
 # Lógica de Navegação na Barra Lateral
 st.sidebar.title("Navegação")
-page = st.sidebar.radio("Escolha uma página:", ["Início", "Dashboard", "SpeedTest", "Traceroute", "Chat", "Postman" , "Sobre"])
+page = st.sidebar.radio("Escolha uma página:", ["Início", "Dashboard", "SpeedTest", "Traceroute", "Chat", "Postman", "Whois", "Sobre"])
 
 if page == "Início":
     homepage()
@@ -63,5 +70,7 @@ elif page == "Chat":
     chat_page()
 elif page == "Postman":
     postman_page()
+elif page == "Whois":
+    whois_page()
 elif page == "Sobre":
     about_page()
