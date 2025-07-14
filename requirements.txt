@@ -1,7 +1,5 @@
 streamlit
-scapy
 pandas
-matplotlib
 streamlit
 speedtest-cli
 streamlit-extras
