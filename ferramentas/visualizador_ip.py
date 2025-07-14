@@ -23,11 +23,11 @@ def get_ipinfo_details(ip=None):
         return {"success": False}
 
 def ip_viewer():
-    # Injeta JS para detectar o IP do cliente e preencher o input escondido
-    st.markdown("""
-    <script>
-    (async function() {
-        try {
+    # Injeção JS para detectar IP do cliente e passar para Streamlit
+    st.markdown(
+        """
+        <script>
+        (async function() {
             const res = await fetch('https://api64.ipify.org?format=json');
             const data = await res.json();
             const ip = data.ip;
@@ -36,37 +36,31 @@ def ip_viewer():
                 input.value = ip;
                 input.dispatchEvent(new Event("change", { bubbles: true }));
             }
-        } catch (e) {
-            console.log("Erro ao obter IP do cliente:", e);
-        }
-    })();
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Campo oculto para receber IP detectado
-    st.markdown("""
-    <style>
-    input#client_ip_hidden {
-        display: none;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    client_ip = st.text_input(
-        label="IP oculto para captura via JS",
-        key="client_ip_hidden",
-        label_visibility="hidden"
+        })();
+        </script>
+        """,
+        unsafe_allow_html=True,
     )
 
-    # Usar IP detectado ou fallback para None (que indica o IP do servidor na consulta)
-    ip_para_consultar = client_ip if client_ip else None
+    # Esconde o campo input do IP do cliente via CSS
+    st.markdown(
+        """
+        <style>
+        input#client_ip_hidden { display: none; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # Consulta ipinfo.io para o IP selecionado
-    user_info = get_ipinfo_details(ip_para_consultar)
+    # Campo oculto para receber IP detectado pelo JS
+    client_ip = st.text_input("client_ip_hidden", key="client_ip_hidden", label_visibility="hidden")
+
+    # Define o IP para consulta: o IP detectado pelo JS ou None para pegar o IP do servidor
+    ip_para_consultar = client_ip if client_ip else None
 
     st.title("🌍 Visualizador de IP e Localização com ipinfo.io")
 
-    # Informações do servidor (host onde a aplicação roda)
+    # Informações do servidor
     st.header("💻 Informações do Servidor da Aplicação")
     server_info = get_ipinfo_details()
     if server_info["success"]:
@@ -84,6 +78,7 @@ def ip_viewer():
 
     # Informações do usuário (cliente)
     st.header("👤 Seu IP e Localização")
+    user_info = get_ipinfo_details(ip_para_consultar)
     if user_info["success"]:
         col1, col2, col3 = st.columns([2,1,1])
         col1.metric("Seu IP Público", user_info["ip"])
@@ -95,4 +90,10 @@ def ip_viewer():
     else:
         st.error("Não foi possível obter as informações do seu IP.")
 
-    st.info("🔎 Dados obtidos pela API pública ipinfo.io. A precisão depende do IP detectado e da infraestrutura da rede.")
+    st.info(
+        "🔎 Dados obtidos pela API pública ipinfo.io. "
+        "A precisão depende do IP detectado e da infraestrutura da rede."
+    )
+
+if __name__ == "__main__":
+    ip_viewer()
