@@ -20,9 +20,10 @@ def ip_viewer():
             response = requests.get("https://api.ipify.org", timeout=5)
             response.raise_for_status()
             ip_address = response.text.strip()
+            st.write(f"[Debug] IP obtido via ipify.org: {ip_address}")
             return ip_address
         except Exception as e:
-            st.write(f"Erro ao obter IP: {str(e)}")
+            st.write(f"[Debug] Erro ao obter IP: {str(e)}")
             return "Unknown"
 
     def get_city_and_country(ip_address):
@@ -36,9 +37,10 @@ def ip_viewer():
             if data.get("status") == "success":
                 city = data.get("city", "N/A")
                 country = data.get("country", "N/A")
+                st.write(f"[Debug] Cidade: {city}, País: {country}")
                 return city, country
             else:
-                st.write("API ip-api.com retornou status de falha")
+                st.write("[Debug] API ip-api.com retornou status de falha")
                 return "N/A", "N/A"
         except Exception as e:
             st.write(f"[Debug] Erro ao obter cidade/país: {str(e)}")
