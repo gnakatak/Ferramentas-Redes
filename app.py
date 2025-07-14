@@ -1,6 +1,5 @@
 import streamlit as st
-import requests
-from ferramentas import dashboard, speedtest_module, traceroute_dev, chat
+from ferramentas import dashboard, speedtest_module, traceroute_dev, chat, visualizador_ip
 
 st.set_page_config(page_title="Ferramentas de Rede", layout="centered")
 
@@ -15,28 +14,32 @@ def reset_speedtest_state():
     if "proximo_teste" in st.session_state:
         del st.session_state.proximo_teste
 
-# Funções para simular as páginas
+# Função para a página inicial
 def homepage():
-    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
-    st.title("Olá Streamlit")
+    reset_speedtest_state()
+    st.title("Bem-vindo às Ferramentas de Rede")
+    st.write("Explore ferramentas para monitoramento de rede, como SpeedTest, Traceroute e Chat em tempo real.")
+    
+    # Chamar o visualizador de IP
+    visualizador_ip.ip_viewer()
 
 def dashboard_page():
-    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
+    reset_speedtest_state()
     dashboard.render_dashboard() 
 
 def speedtest_page():
     speedtest_module.speedtest_teste()
 
 def traceroute_page():
-    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
+    reset_speedtest_state()
     traceroute_dev.traceroute_dev()
 
 def chat_page():
-    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
+    reset_speedtest_state()
     chat.chat_dev()
 
 def about_page():
-    reset_speedtest_state() # Adicionado para limpar o estado ao sair do SpeedTest
+    reset_speedtest_state()
     st.title("Sobre Nós")
     st.write("Informações sobre o projeto e a equipe.")
 
